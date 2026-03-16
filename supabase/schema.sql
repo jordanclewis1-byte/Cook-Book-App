@@ -7,8 +7,24 @@ create table if not exists public.recipes (
   description text not null,
   ingredients text not null,
   instructions text not null,
+  servings text,
+  time_text text,
+  calories_text text,
+  protein_text text,
+  source_type text,
+  source_conversation_id text,
+  raw_import_text text,
   created_at timestamptz not null default now()
 );
+
+alter table public.recipes
+  add column if not exists servings text,
+  add column if not exists time_text text,
+  add column if not exists calories_text text,
+  add column if not exists protein_text text,
+  add column if not exists source_type text,
+  add column if not exists source_conversation_id text,
+  add column if not exists raw_import_text text;
 
 alter table public.recipes enable row level security;
 
@@ -57,4 +73,5 @@ values
     'Simple vegetarian chili.',
     '- 2 cans beans' || E'\n' || '- 1 onion' || E'\n' || '- 1 can tomatoes' || E'\n' || '- Chili powder',
     '1. Cook onion.' || E'\n' || '2. Add everything else.' || E'\n' || '3. Simmer for 20 minutes.'
-  );
+  )
+on conflict do nothing;
