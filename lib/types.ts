@@ -7,3 +7,5 @@ export type Recipe = {
   instructions: string;
   created_at: string;
 };
+
+export type RecipeFormData = Omit<Recipe, "id" | "created_at">;

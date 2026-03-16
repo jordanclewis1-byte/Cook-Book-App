@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { RecipeFormData } from "@/lib/types";
 
@@ -15,18 +15,64 @@ const emptyForm: RecipeFormData = {
   instructions: ""
 };
 
-export default function AddRecipePage() {
+export default function EditRecipePage() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [formData, setFormData] = useState(emptyForm);
+  const recipeId = params.id;
+
+  const [formData, setFormData] = useState<RecipeFormData>(emptyForm);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    async function loadRecipe() {
+      if (!recipeId) {
+        setMessage("Recipe ID is missing.");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setMessage("");
+
+      const { data, error } = await supabase
+        .from("recipes")
+        .select("*")
+        .eq("id", recipeId)
+        .single();
+
+      if (error || !data) {
+        setMessage(error?.message ?? "Recipe not found.");
+        setLoading(false);
+        return;
+      }
+
+      setFormData({
+        title: data.title,
+        protein: data.protein,
+        description: data.description,
+        ingredients: data.ingredients,
+        instructions: data.instructions
+      });
+      setLoading(false);
+    }
+
+    loadRecipe();
+  }, [recipeId]);
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!recipeId) {
+      setMessage("Recipe ID is missing.");
+      return;
+    }
+
     setSaving(true);
     setMessage("");
 
-    const { error } = await supabase.from("recipes").insert(formData);
+    const { error } = await supabase.from("recipes").update(formData).eq("id", recipeId);
 
     if (error) {
       setMessage(`Error: ${error.message}`);
@@ -34,18 +80,19 @@ export default function AddRecipePage() {
       return;
     }
 
-    setMessage("Recipe saved.");
-    setFormData(emptyForm);
-    setSaving(false);
     router.push("/");
     router.refresh();
+  }
+
+  if (loading) {
+    return <section className="card">Loading recipe...</section>;
   }
 
   return (
     <section className="card stack">
       <div>
-        <h2>Add a recipe</h2>
-        <p className="muted">Keep this simple. Paste ingredients and instructions as plain text.</p>
+        <h2>Edit recipe</h2>
+        <p className="muted">Update the saved recipe details and return to the main list.</p>
       </div>
 
       <form className="stack" onSubmit={handleSubmit}>
@@ -99,9 +146,14 @@ export default function AddRecipePage() {
           />
         </label>
 
-        <button className="button" type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save Recipe"}
-        </button>
+        <div className="button-row">
+          <button className="button" type="submit" disabled={saving}>
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+          <button className="button button-secondary" type="button" onClick={() => router.push("/")}>
+            Cancel
+          </button>
+        </div>
 
         {message ? <p>{message}</p> : null}
       </form>

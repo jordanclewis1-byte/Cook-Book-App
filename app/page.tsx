@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import type { Recipe } from "@/lib/types";
 
@@ -11,6 +12,7 @@ export default function HomePage() {
   const [searchText, setSearchText] = useState("");
   const [proteinFilter, setProteinFilter] = useState("All");
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -47,6 +49,28 @@ export default function HomePage() {
 
     loadRecipes();
   }, [proteinFilter, searchText]);
+
+  async function handleDelete(recipeId: string) {
+    const shouldDelete = window.confirm("Delete this recipe?");
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setDeletingId(recipeId);
+    setError("");
+
+    const { error } = await supabase.from("recipes").delete().eq("id", recipeId);
+
+    if (error) {
+      setError(error.message);
+      setDeletingId(null);
+      return;
+    }
+
+    setRecipes((currentRecipes) => currentRecipes.filter((recipe) => recipe.id !== recipeId));
+    setDeletingId(null);
+  }
 
   return (
     <div className="stack">
@@ -106,6 +130,20 @@ export default function HomePage() {
                 <h4>Instructions</h4>
                 <p style={{ whiteSpace: "pre-line" }}>{recipe.instructions}</p>
               </div>
+            </div>
+
+            <div className="button-row">
+              <Link className="button button-secondary" href={`/edit-recipe/${recipe.id}`}>
+                Edit
+              </Link>
+              <button
+                className="button button-danger"
+                type="button"
+                disabled={deletingId === recipe.id}
+                onClick={() => handleDelete(recipe.id)}
+              >
+                {deletingId === recipe.id ? "Deleting..." : "Delete"}
+              </button>
             </div>
           </article>
         ))}

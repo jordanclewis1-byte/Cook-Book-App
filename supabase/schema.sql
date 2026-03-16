@@ -12,6 +12,11 @@ create table if not exists public.recipes (
 
 alter table public.recipes enable row level security;
 
+drop policy if exists "Allow public read recipes" on public.recipes;
+drop policy if exists "Allow public insert recipes" on public.recipes;
+drop policy if exists "Allow public update recipes" on public.recipes;
+drop policy if exists "Allow public delete recipes" on public.recipes;
+
 create policy "Allow public read recipes"
 on public.recipes
 for select
@@ -23,6 +28,19 @@ on public.recipes
 for insert
 to anon
 with check (true);
+
+create policy "Allow public update recipes"
+on public.recipes
+for update
+to anon
+using (true)
+with check (true);
+
+create policy "Allow public delete recipes"
+on public.recipes
+for delete
+to anon
+using (true);
 
 insert into public.recipes (title, protein, description, ingredients, instructions)
 values

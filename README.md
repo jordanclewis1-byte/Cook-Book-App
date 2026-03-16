@@ -2,13 +2,21 @@
 
 A very simple personal cookbook app built with Next.js and Supabase.
 
+## Project memory
+
+For recovered context from earlier sessions and a stable summary of where the project stands now, start with:
+
+- `PROJECT_HISTORY.md`
+- `NEXT_STEPS.md`
+
 ## What this app does
 
-This MVP does only 3 things:
+This MVP currently does 4 things:
 
 1. Shows your recipes
 2. Lets you search and filter recipes, especially by protein
 3. Lets you add new recipes
+4. Lets you edit or delete existing recipes
 
 There is no authentication, no AI search, and no extra architecture yet.
 
@@ -18,10 +26,13 @@ There is no authentication, no AI search, and no extra architecture yet.
   The main page shell. This adds the site title and top navigation.
 
 - `app/page.tsx`
-  The home page. This loads recipes from Supabase and lets you search/filter them.
+  The home page. This loads recipes from Supabase, lets you search/filter them, and now exposes edit/delete actions.
 
 - `app/add-recipe/page.tsx`
   The add recipe page. This has a simple form that saves a recipe to Supabase.
+
+- `app/edit-recipe/[id]/page.tsx`
+  The edit recipe page. This loads one recipe, lets you update it, and saves changes to Supabase.
 
 - `app/globals.css`
   Basic styling for the whole app.
@@ -30,7 +41,7 @@ There is no authentication, no AI search, and no extra architecture yet.
   Creates the Supabase client so the app can talk to your database.
 
 - `lib/types.ts`
-  A small TypeScript type for recipes.
+  Shared TypeScript types for recipes and recipe form data.
 
 - `supabase/schema.sql`
   SQL you can paste into the Supabase SQL Editor to create your table and sample data.
@@ -106,6 +117,14 @@ The protein dropdown lets you show only recipes with one protein type, like `Chi
 
 The add recipe page inserts a new row into the `recipes` table.
 
+### Editing recipes
+
+Each recipe card includes an `Edit` button that opens the edit page and updates that recipe in Supabase.
+
+### Deleting recipes
+
+Each recipe card includes a `Delete` button that removes that recipe from Supabase after confirmation.
+
 This keeps things very simple:
 
 - no auth
@@ -116,14 +135,13 @@ This keeps things very simple:
 ## Beginner notes
 
 - The app uses the Next.js App Router because it is the default in modern Next.js.
-- Both pages are marked with `"use client"` because they use React state and browser-side Supabase calls.
+- All recipe pages are marked with `"use client"` because they use React state and browser-side Supabase calls.
 - This is not locked down for production yet, because you asked for the simplest MVP first.
 
 ## Good next steps after the MVP
 
 When you are ready, the next useful upgrades would be:
 
-1. Edit and delete recipes
-2. Add tags like `Dinner`, `Meal Prep`, `Quick`
-3. Add recipe photos
-4. Add authentication later
+1. Add tags like `Dinner`, `Meal Prep`, `Quick`
+2. Add recipe photos
+3. Add authentication later
