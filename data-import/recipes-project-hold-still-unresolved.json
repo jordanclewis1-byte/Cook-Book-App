@@ -1,0 +1,36 @@
+[
+  {
+    "source_conversation_id": "69ac6b89-4848-8328-baed-69298ceca5fe",
+    "source_conversation_title": "High Protein Sweet Breakfasts",
+    "source_gizmo_id": "g-p-69534c4a2bd881918d461401f82ff136",
+    "extracted_from_multi_recipe": true,
+    "recipe_index": 1,
+    "title": "High-Protein Egg White Crepes with Ricotta & Berries",
+    "description": "💡 **Important:** The batter should look **very thin—similar to heavy cream**.",
+    "protein": "Other",
+    "servings": "1 (2–3 crepes, ~30–35g protein)**",
+    "time": null,
+    "calories": null,
+    "protein_note": "35g protein",
+    "raw_text": "**Serves 1 (2–3 crepes, ~30–35g protein)**\n\n### Ingredients\n\n**Crepe batter**\n- ½ cup **liquid egg whites**\n- ¼ cup **rolled oats**\n- 2 tbsp **soy milk** (or regular milk)\n- ¼ tsp **vanilla extract**\n- Pinch **salt**\n- Optional: pinch **cinnamon**\n\n**Filling**\n- ½ cup **part-skim ricotta** *or* Greek yogurt  \n- ½ cup **berries** (strawberries, blueberries, raspberries)  \n- 1 tsp **honey or maple syrup**  \n- Optional: lemon zest\n\n**For the pan**\n- ½ tsp **olive oil** or cooking spray\n\n---\n\n# Step-by-Step Instructions\n\n### 1. Blend the batter\n1. Add **oats to a blender first** and pulse until they become a fine flour.\n2. Add:\n   - egg whites  \n   - soy milk  \n   - vanilla  \n   - salt  \n   - cinnamon (optional)\n\n3. Blend for **10–15 seconds** until smooth.\n\n💡 **Important:** The batter should look **very thin—similar to heavy cream**.  \nIf it’s thicker than that, add **1–2 tbsp milk**.\n\n---\n\n### 2. Rest the batter (important)\nLet the batter **sit for 3–5 minutes**.\n\nThis allows the oat flour to hydrate and prevents tearing when cooking.\n\n---\n\n### 3. Heat the pan\n1. Use a **nonstick skillet (8–10 inches)**.\n2. Heat on **medium-low**.\n3. Add **½ tsp olive oil** and wipe excess with a paper towel.\n\nYou want the pan lightly coated but **not greasy**.",
+    "normalized_title": "high-protein egg white crepes with ricotta & berries",
+    "review_status": "hold"
+  },
+  {
+    "source_conversation_id": "6952aed6-96b8-832c-870c-f48b5a52c721",
+    "source_conversation_title": "One-Pan Halibut Skillet",
+    "source_gizmo_id": "g-p-69534c4a2bd881918d461401f82ff136",
+    "extracted_from_multi_recipe": true,
+    "recipe_index": 1,
+    "title": "One-Pan Halibut with Leeky Brown Rice 🍋🐟",
+    "description": "One-Pan Halibut Skillet",
+    "protein": "Fish",
+    "servings": "** 2",
+    "time": "** ~40 minutes",
+    "calories": null,
+    "protein_note": null,
+    "raw_text": "**Serves:** 2  \n**Time:** ~40 minutes  \n**Pan:** Oven-safe skillet or shallow Dutch oven with a lid (or foil)\n\n### Ingredients\n- 2 halibut fillets (5–6 oz each)\n- 1 cup **brown rice**  \n  - *Shortcut:* use **parboiled or microwave-ready brown rice** for true one-pan ease\n- 1 medium **leek**, thinly sliced (white + light green parts)\n- 2¼ cups **vegetable or chicken broth**\n- 2 tbsp **olive oil**\n- 2 cloves **garlic**, minced\n- ½ tsp **salt** (more to taste)\n- ¼ tsp **black pepper**\n- ½ tsp **smoked paprika** or regular paprika\n- Optional but great:\n  - Zest of ½ lemon\n  - Splash of white wine\n  - Fresh parsley or dill\n  - Small pat of butter\n\n---\n\n### Instructions",
+    "normalized_title": "one-pan halibut with leeky brown rice 🍋🐟",
+    "review_status": "hold"
+  }
+]

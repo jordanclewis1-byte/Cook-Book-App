@@ -102,6 +102,44 @@ A ChatGPT export zip was unpacked and analyzed to find the recipe project conver
 4. Improve recipe readability by rendering cleaner lists and showing servings/time/calorie/protein metadata.
 5. Add broader classification fields like tags, meal type, or course.
 
+## 2026-03-20: Approved import set, hold resolution, and deduped live import
+
+The staged ChatGPT import rows were reviewed in detail, converted into a cleaner approved set, and then loaded into the live recipes table with title-based deduplication.
+
+### What We Learned
+
+- `public.recipe_imports` is cumulative staging, so loading a new approved batch does not replace older approved rows.
+- Title is the safest dedupe key for the current import because one `source_conversation_id` can legitimately produce multiple recipe rows.
+- Hold rows fall into 2 clear buckets: recoverable editorial splits/merges and truly incomplete extracts that should stay out.
+- The two still-incomplete hold rows are `One-Pan Halibut with Leeky Brown Rice` and `High-Protein Egg White Crepes with Ricotta & Berries` because their later steps are missing from the extract.
+- Git and Python are both installed on this machine but are not reliably on the PowerShell PATH inside Codex, so explicit executable paths or inline Node scripts are safer during sessions.
+
+### What Was Completed
+
+- Reviewed the candidate import rows and documented decisions in `data-import/STAGING_REVIEW_2026-03-20.md`.
+- Built a 34-recipe approved import set in `data-import/recipes-project-approved.*`.
+- Kept the `Protein Pancakes Recipe` row in the approved set per user choice.
+- Resolved most hold rows into clean candidate recipes in `data-import/recipes-project-hold-resolved-candidates.*`.
+- Merged the reconstructed `Miso-Tahini Fish with Caramelized Onions` into the approved set.
+- Merged `Whipped Ricotta Breakfast Bowl` into the approved set.
+- Removed these resolved-hold recipes before merge, per user choice:
+  - `Savory Oats with Smoked Salmon and Yogurt`
+  - `Tropical Cream Oats`
+  - `Egg-White Oatmeal (Creamy, Not Eggy)`
+- Left only 2 unresolved hold rows in `data-import/recipes-project-hold-still-unresolved.json`.
+- Generated `supabase/recipe_imports_load_approved.sql` for the approved staging load.
+- Loaded the approved set into `public.recipe_imports`.
+- Imported approved staging rows into `public.recipes` with a title-deduped insert so duplicate staging rows did not create duplicate live recipes.
+- Verified there were 0 approved staging titles still missing from `public.recipes` after the import.
+
+### Recommended Next Steps
+
+1. Clean up the recipe UI so imported markdown artifacts and raw assistant formatting do not show in recipe cards.
+2. Surface `servings`, `time_text`, `calories_text`, and `protein_text` in the app.
+3. Update the filtering model to better match a pescatarian cookbook instead of the current protein-only taxonomy.
+4. Decide later whether to manually recover the 2 unresolved hold rows from the original ChatGPT export.
+5. Consider whether `public.recipe_imports` should be cleaned up or left as an audit log now that approved rows have been imported.
+
 ## Repo convention going forward
 
 For future major milestones, record a short dated entry in `PROJECT_HISTORY.md` and include these sections:

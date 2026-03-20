@@ -1,0 +1,51 @@
+[
+  {
+    "title": "Apple Pie Oats",
+    "protein": "Other",
+    "description": "High-protein oatmeal with apple, cinnamon, and nutmeg.",
+    "ingredients": "TO REVIEW: extracted from ChatGPT export\n\n### Base\n- 1/2 cup rolled oats\n- 1 cup unsweetened soy milk\n- 1/2 cup liquid egg whites\n- 1/2 cup nonfat Greek yogurt\n\nBase method: cook oats in soy milk, stir in egg whites on low heat, remove from heat, then stir in Greek yogurt.\n\n### Add-ins\n- Diced apple\n- Cinnamon\n- Nutmeg\n- Pinch of salt\n\n### Finish\nCook the apple first if you want it softer, then stir into the finished oats.",
+    "instructions": "TO REVIEW: parse final recipe steps from extracted text\n\n### Base\n- 1/2 cup rolled oats\n- 1 cup unsweetened soy milk\n- 1/2 cup liquid egg whites\n- 1/2 cup nonfat Greek yogurt\n\nBase method: cook oats in soy milk, stir in egg whites on low heat, remove from heat, then stir in Greek yogurt.\n\n### Add-ins\n- Diced apple\n- Cinnamon\n- Nutmeg\n- Pinch of salt\n\n### Finish\nCook the apple first if you want it softer, then stir into the finished oats."
+  },
+  {
+    "title": "Banana Bread Oats",
+    "protein": "Other",
+    "description": "High-protein oatmeal with mashed banana, cinnamon, and vanilla.",
+    "ingredients": "TO REVIEW: extracted from ChatGPT export\n\n### Base\n- 1/2 cup rolled oats\n- 1 cup unsweetened soy milk\n- 1/2 cup liquid egg whites\n- 1/2 cup nonfat Greek yogurt\n\nBase method: cook oats in soy milk, stir in egg whites on low heat, remove from heat, then stir in Greek yogurt.\n\n### Add-ins\n- 1/2 mashed banana\n- Cinnamon\n- Vanilla\n- Optional: extra 1/4 cup Greek yogurt on top\n\n### Finish\nStir the banana into the oats and serve warm.",
+    "instructions": "TO REVIEW: parse final recipe steps from extracted text\n\n### Base\n- 1/2 cup rolled oats\n- 1 cup unsweetened soy milk\n- 1/2 cup liquid egg whites\n- 1/2 cup nonfat Greek yogurt\n\nBase method: cook oats in soy milk, stir in egg whites on low heat, remove from heat, then stir in Greek yogurt.\n\n### Add-ins\n- 1/2 mashed banana\n- Cinnamon\n- Vanilla\n- Optional: extra 1/4 cup Greek yogurt on top\n\n### Finish\nStir the banana into the oats and serve warm."
+  },
+  {
+    "title": "Berry Cheesecake Oats",
+    "protein": "Other",
+    "description": "High-protein oatmeal with berries, vanilla, and cinnamon.",
+    "ingredients": "TO REVIEW: extracted from ChatGPT export\n\n### Base\n- 1/2 cup rolled oats\n- 1 cup unsweetened soy milk\n- 1/2 cup liquid egg whites\n- 1/2 cup nonfat Greek yogurt\n\nBase method: cook oats in soy milk, stir in egg whites on low heat, remove from heat, then stir in Greek yogurt.\n\n### Add-ins\n- Frozen mixed berries\n- Vanilla extract\n- Cinnamon\n- Optional: 1 tsp maple syrup\n\n### Finish\nTop with berries and serve warm.",
+    "instructions": "TO REVIEW: parse final recipe steps from extracted text\n\n### Base\n- 1/2 cup rolled oats\n- 1 cup unsweetened soy milk\n- 1/2 cup liquid egg whites\n- 1/2 cup nonfat Greek yogurt\n\nBase method: cook oats in soy milk, stir in egg whites on low heat, remove from heat, then stir in Greek yogurt.\n\n### Add-ins\n- Frozen mixed berries\n- Vanilla extract\n- Cinnamon\n- Optional: 1 tsp maple syrup\n\n### Finish\nTop with berries and serve warm."
+  },
+  {
+    "title": "Miso-Tahini Fish with Caramelized Onions",
+    "protein": "Fish",
+    "description": "Baked fish topped with caramelized onions and lemon tahini sauce.",
+    "ingredients": "TO REVIEW: extracted from ChatGPT export\n\n### Why this works\n- Deep sweetness from slow caramelized onions\n- Creamy richness from tahini sauce\n- Brightness from lemon and herbs\n- Savory depth from cumin and garlic\n\n### Ingredients (2 servings)\n- 2 fillets cod, halibut, or sablefish (5-6 oz each)\n- 1 tsp olive oil\n- Salt and black pepper\n\n### Caramelized onions\n- 2 medium yellow onions, thinly sliced\n- 1 tbsp olive oil\n- 1/2 tsp cumin\n- Pinch of salt\n\n### Lemon tahini sauce\n- 2 tbsp tahini\n- 2 tbsp Greek yogurt (optional)\n- Juice of 1/2 lemon\n- 1 small garlic clove, grated\n- 2-3 tbsp warm water\n- Pinch of salt\n\n### Finish\n- Chopped parsley or dill\n- Chili flakes\n- Lemon zest\n\n### Instructions\n1. Heat 1 tbsp olive oil over medium-low. Add onions, cumin, and a pinch of salt. Cook 25-30 minutes until deeply golden, soft, and jammy.\n2. Heat oven to 400?F (205?C). Place fish in a baking dish, drizzle with olive oil, and season with salt and pepper.\n3. Bake fish 10-12 minutes until flaky.\n4. Whisk tahini, Greek yogurt, lemon juice, garlic, warm water, and salt until smooth and pourable.\n5. Plate fish, spoon warm onions over the top, and drizzle generously with lemon tahini sauce.\n6. Finish with herbs, chili flakes, and lemon zest.",
+    "instructions": "TO REVIEW: parse final recipe steps from extracted text\n\n### Why this works\n- Deep sweetness from slow caramelized onions\n- Creamy richness from tahini sauce\n- Brightness from lemon and herbs\n- Savory depth from cumin and garlic\n\n### Ingredients (2 servings)\n- 2 fillets cod, halibut, or sablefish (5-6 oz each)\n- 1 tsp olive oil\n- Salt and black pepper\n\n### Caramelized onions\n- 2 medium yellow onions, thinly sliced\n- 1 tbsp olive oil\n- 1/2 tsp cumin\n- Pinch of salt\n\n### Lemon tahini sauce\n- 2 tbsp tahini\n- 2 tbsp Greek yogurt (optional)\n- Juice of 1/2 lemon\n- 1 small garlic clove, grated\n- 2-3 tbsp warm water\n- Pinch of salt\n\n### Finish\n- Chopped parsley or dill\n- Chili flakes\n- Lemon zest\n\n### Instructions\n1. Heat 1 tbsp olive oil over medium-low. Add onions, cumin, and a pinch of salt. Cook 25-30 minutes until deeply golden, soft, and jammy.\n2. Heat oven to 400?F (205?C). Place fish in a baking dish, drizzle with olive oil, and season with salt and pepper.\n3. Bake fish 10-12 minutes until flaky.\n4. Whisk tahini, Greek yogurt, lemon juice, garlic, warm water, and salt until smooth and pourable.\n5. Plate fish, spoon warm onions over the top, and drizzle generously with lemon tahini sauce.\n6. Finish with herbs, chili flakes, and lemon zest."
+  },
+  {
+    "title": "Savory Miso Scallion Oats",
+    "protein": "Other",
+    "description": "Savory high-protein oatmeal with miso, scallions, and black pepper.",
+    "ingredients": "TO REVIEW: extracted from ChatGPT export\n\n### Base\n- 1/2 cup rolled oats\n- 1 cup unsweetened soy milk\n- 1/2 cup liquid egg whites\n- 1/2 cup nonfat Greek yogurt\n\nBase method: cook oats in soy milk, stir in egg whites on low heat, remove from heat, then stir in Greek yogurt.\n\n### Add-ins\n- 1 tsp white miso\n- Scallions\n- Black pepper\n- Optional: soft-boiled egg or tofu cubes\n\n### Finish\nStir the miso into the oats at the end and top with scallions and black pepper.",
+    "instructions": "TO REVIEW: parse final recipe steps from extracted text\n\n### Base\n- 1/2 cup rolled oats\n- 1 cup unsweetened soy milk\n- 1/2 cup liquid egg whites\n- 1/2 cup nonfat Greek yogurt\n\nBase method: cook oats in soy milk, stir in egg whites on low heat, remove from heat, then stir in Greek yogurt.\n\n### Add-ins\n- 1 tsp white miso\n- Scallions\n- Black pepper\n- Optional: soft-boiled egg or tofu cubes\n\n### Finish\nStir the miso into the oats at the end and top with scallions and black pepper."
+  },
+  {
+    "title": "Savory Oats with Egg Whites and Whole Egg",
+    "protein": "Other",
+    "description": "Savory oatmeal with egg whites, a whole egg, scallions, and chili crisp.",
+    "ingredients": "TO REVIEW: extracted from ChatGPT export\n\n### Ingredients\n- 1/2 cup rolled oats\n- Water or vegetable broth, as needed for cooking\n- 1/2 to 3/4 cup liquid egg whites\n- 1 soft-boiled or fried egg\n- Scallions\n- Chili crisp\n- Soy sauce\n\n### Instructions\n1. Cook the oats in water or vegetable broth until creamy.\n2. Stir in the egg whites and cook gently until set.\n3. Top with a soft-boiled or fried egg.\n4. Finish with scallions, chili crisp, and soy sauce.",
+    "instructions": "TO REVIEW: parse final recipe steps from extracted text\n\n### Ingredients\n- 1/2 cup rolled oats\n- Water or vegetable broth, as needed for cooking\n- 1/2 to 3/4 cup liquid egg whites\n- 1 soft-boiled or fried egg\n- Scallions\n- Chili crisp\n- Soy sauce\n\n### Instructions\n1. Cook the oats in water or vegetable broth until creamy.\n2. Stir in the egg whites and cook gently until set.\n3. Top with a soft-boiled or fried egg.\n4. Finish with scallions, chili crisp, and soy sauce."
+  },
+  {
+    "title": "Whipped Ricotta Breakfast Bowl",
+    "protein": "Other",
+    "description": "Whipped ricotta and Greek yogurt breakfast bowl with berries and toasted oats.",
+    "ingredients": "TO REVIEW: extracted from ChatGPT export\n\nThis one feels like **cheesecake mousse** but is surprisingly macro-friendly.\n\n### Ingredients (1 large serving)\n- ½ cup ricotta  \n- ½ cup Greek yogurt  \n- ¼ cup egg whites *(optional but boosts protein)*  \n- ¼ tsp vanilla  \n- 1 tsp honey or maple syrup  \n- Cinnamon pinch\n\n**Toppings**\n- Berries  \n- 2 tbsp toasted oats or granola substitute  \n- Lemon zest\n\n### Instructions\n1. If using egg whites: microwave them **30–40 sec** until just set and cool slightly.\n2. Blend or whisk ricotta + yogurt + vanilla + honey until **light and fluffy**.\n3. Fold in the cooked egg whites (they disappear into the mixture).\n4. Top with berries and oats.",
+    "instructions": "TO REVIEW: parse final recipe steps from extracted text\n\nThis one feels like **cheesecake mousse** but is surprisingly macro-friendly.\n\n### Ingredients (1 large serving)\n- ½ cup ricotta  \n- ½ cup Greek yogurt  \n- ¼ cup egg whites *(optional but boosts protein)*  \n- ¼ tsp vanilla  \n- 1 tsp honey or maple syrup  \n- Cinnamon pinch\n\n**Toppings**\n- Berries  \n- 2 tbsp toasted oats or granola substitute  \n- Lemon zest\n\n### Instructions\n1. If using egg whites: microwave them **30–40 sec** until just set and cool slightly.\n2. Blend or whisk ricotta + yogurt + vanilla + honey until **light and fluffy**.\n3. Fold in the cooked egg whites (they disappear into the mixture).\n4. Top with berries and oats."
+  }
+]
