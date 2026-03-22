@@ -5,24 +5,28 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import type { Recipe } from "@/lib/types";
 
-const categoryOptions = [
-  "All",
-  "Seafood",
-  "Beans & Lentils",
+const categoryOptions = ["All", "Lunch/Dinner", "Side Dish", "Breakfast", "Dessert"];
+
+const proteinTypeOptions = [
+  "Any Protein",
+  "Fish",
+  "Shrimp",
+  "Beans/Lentils",
   "Tofu",
-  "Breakfast",
-  "Side Dish",
-  "Other"
+  "Eggs",
+  "Dairy",
+  "Chicken",
+  "None/Vegetable"
 ];
 
-const fishTypeDefinitions = [
+const fishSubtypeDefinitions = [
   { label: "Cod", patterns: [/\bcod\b/] },
   { label: "Salmon", patterns: [/\bsalmon\b/] },
   { label: "Halibut", patterns: [/\bhalibut\b/] },
-  { label: "Shrimp", patterns: [/\bshrimp\b/, /\bprawn(?:s)?\b/] },
   { label: "Tuna", patterns: [/\btuna\b/] },
   { label: "Pollock", patterns: [/\bpollock\b/] },
-  { label: "Sablefish", patterns: [/\bsablefish\b/, /\bblack cod\b/] }
+  { label: "Sablefish", patterns: [/\bsablefish\b/, /\bblack cod\b/] },
+  { label: "Generic Fish", patterns: [/\bfish\b/, /\bwhite fish\b/] }
 ];
 
 const mojibakeReplacements: Array<[string, string]> = [
@@ -123,24 +127,13 @@ function cleanLine(line: string) {
 }
 
 function parseIngredientItems(text: string) {
-  const lines = text.split("\n");
-  const items: string[] = [];
-
-  for (const line of lines) {
-    const cleaned = cleanLine(line.replace(/^\s*[-*]\s*/, ""));
-
-    if (!cleaned || isIgnoredLine(cleaned)) {
-      continue;
-    }
-
-    if (/^#{1,6}\s*/.test(cleaned) || /^\d+\.\s*/.test(cleaned)) {
-      continue;
-    }
-
-    items.push(cleaned);
-  }
-
-  return items;
+  return text
+    .split("\n")
+    .map((line) => cleanLine(line.replace(/^\s*[-*]\s*/, "")))
+    .filter(Boolean)
+    .filter((line) => !isIgnoredLine(line))
+    .filter((line) => !/^#{1,6}\s*/.test(line))
+    .filter((line) => !/^\d+\.\s*/.test(line));
 }
 
 function parseInstructionItems(text: string) {
@@ -207,96 +200,118 @@ function getMetaItems(recipe: Recipe) {
   ].filter(Boolean) as string[];
 }
 
+function getRecipeTitle(recipe: Recipe) {
+  return normalizeImportedText(recipe.title).toLowerCase();
+}
+
+function getRecipeDescription(recipe: Recipe) {
+  return normalizeImportedText(recipe.description).toLowerCase();
+}
+
 function getRecipeHaystack(recipe: Recipe) {
   return normalizeImportedText(
     [recipe.title, recipe.description, recipe.ingredients, recipe.instructions].join(" ")
   ).toLowerCase();
 }
 
-function getRecipeTitle(recipe: Recipe) {
-  return normalizeImportedText(recipe.title).toLowerCase();
+function getProteinSourceText(recipe: Recipe) {
+  return [getRecipeTitle(recipe), ...getIngredientItems(recipe).map((item) => item.toLowerCase())].join(" ");
 }
 
-function isBreakfastRecipe(recipe: Recipe) {
+function getProteinTypes(recipe: Recipe) {
   const title = getRecipeTitle(recipe);
-  const description = normalizeImportedText(recipe.description).toLowerCase();
-  return /(oats|oatmeal|pancake|breakfast|crepes|breakfast bowl)/.test(title) ||
-    (/breakfast/.test(description) && /(ricotta|yogurt|oat|pancake|berries|egg)/.test(title + " " + description));
+  const description = getRecipeDescription(recipe);
+  const proteinSourceText = getProteinSourceText(recipe);
+  const proteinTypes = new Set<string>();
+
+  if (/\bshrimp\b|\bprawn(?:s)?\b/.test(title) || /\bshrimp\b|\bprawn(?:s)?\b/.test(proteinSourceText)) {
+    proteinTypes.add("Shrimp");
+  }
+
+  if (/(\bfish\b|cod|salmon|halibut|tuna|pollock|sablefish|seafood)/.test(title)) {
+    proteinTypes.add("Fish");
+  }
+
+  if (/(\bfish\b|cod|salmon|halibut|tuna|pollock|sablefish|seafood)/.test(proteinSourceText)) {
+    proteinTypes.add("Fish");
+  }
+
+  if (/\btofu\b/.test(title) || /\btofu\b/.test(proteinSourceText) || recipe.protein === "Tofu") {
+    proteinTypes.add("Tofu");
+  }
+
+  if (/\bchicken\b/.test(title) || /\bchicken\b/.test(proteinSourceText) || recipe.protein === "Chicken") {
+    proteinTypes.add("Chicken");
+  }
+
+  if (/(lentils|chickpeas|white bean|black bean|cannellini|butter beans|beans\b)/.test(title) || /(lentils|chickpeas|white bean|black bean|cannellini|butter beans|beans\b)/.test(proteinSourceText) || recipe.protein === "Beans") {
+    proteinTypes.add("Beans/Lentils");
+  }
+
+  if (/(egg white|egg whites|whole egg|eggs\b|crepes)/.test(title + " " + proteinSourceText)) {
+    proteinTypes.add("Eggs");
+  }
+
+  if (/(dessert style|breakfast bowl|ricotta|cottage cheese|greek yogurt|yogurt|cheesecake)/.test(title + " " + description) || /(ricotta|cottage cheese|greek yogurt|yogurt|feta|mozzarella|cheesecake)/.test(proteinSourceText)) {
+    proteinTypes.add("Dairy");
+  }
+
+  if (proteinTypes.size === 0) {
+    proteinTypes.add("None/Vegetable");
+  }
+
+  return Array.from(proteinTypes);
 }
 
-function isSideDishRecipe(recipe: Recipe) {
-  const title = getRecipeTitle(recipe);
-  const description = normalizeImportedText(recipe.description).toLowerCase();
-  const haystack = getRecipeHaystack(recipe);
+function getFishSubtypes(recipe: Recipe) {
+  const proteinTypes = getProteinTypes(recipe);
 
-  if (/(fish|shrimp|prawn|tuna|cod|salmon|halibut|pollock|sablefish)/.test(title)) {
-    return false;
-  }
-
-  if (/(cauliflower rice|brussels sprouts|lentil mash)/.test(title)) {
-    return true;
-  }
-
-  if (/red lentils/.test(title) && !/(stew|curry|bake|casserole)/.test(title)) {
-    return true;
-  }
-
-  return /(side dish|side ideas|serve alongside)/.test(title + " " + description + " " + haystack);
-}
-
-function isTofuRecipe(recipe: Recipe) {
-  const haystack = getRecipeHaystack(recipe);
-  return recipe.protein === "Tofu" || /tofu/.test(haystack);
-}
-
-function isBeansAndLentilsRecipe(recipe: Recipe) {
-  const haystack = getRecipeHaystack(recipe);
-  return recipe.protein === "Beans" || /(lentils|chickpeas|white bean|black bean|cannellini|butter beans|beans)/.test(haystack);
-}
-
-function isSeafoodRecipe(recipe: Recipe) {
-  const haystack = getRecipeHaystack(recipe);
-  return (
-    recipe.protein === "Fish" ||
-    /(fish|cod|salmon|halibut|shrimp|prawn|tuna|pollock|sablefish|seafood)/.test(haystack)
-  );
-}
-
-function getRecipeCategory(recipe: Recipe) {
-  if (isBreakfastRecipe(recipe)) {
-    return "Breakfast";
-  }
-
-  if (isSideDishRecipe(recipe)) {
-    return "Side Dish";
-  }
-
-  if (isTofuRecipe(recipe)) {
-    return "Tofu";
-  }
-
-  if (isSeafoodRecipe(recipe)) {
-    return "Seafood";
-  }
-
-  if (isBeansAndLentilsRecipe(recipe)) {
-    return "Beans & Lentils";
-  }
-
-  return "Other";
-}
-function getFishTypes(recipe: Recipe) {
-  if (recipe.protein !== "Fish") {
+  if (!proteinTypes.includes("Fish") && !proteinTypes.includes("Shrimp")) {
     return [] as string[];
   }
 
-  const haystack = normalizeImportedText(
-    [recipe.title, recipe.description, recipe.ingredients, recipe.instructions].join(" ")
-  ).toLowerCase();
-
-  return fishTypeDefinitions
-    .filter((definition) => definition.patterns.some((pattern) => pattern.test(haystack)))
+  const proteinSourceText = getProteinSourceText(recipe);
+  const matches = fishSubtypeDefinitions
+    .filter((definition) => definition.patterns.some((pattern) => pattern.test(proteinSourceText)))
     .map((definition) => definition.label);
+
+  if (proteinTypes.includes("Shrimp") && !matches.includes("Shrimp")) {
+    matches.push("Shrimp");
+  }
+
+  return matches.length > 0 ? matches : proteinTypes.includes("Fish") ? ["Generic Fish"] : ["Shrimp"];
+}
+
+function getRecipeCategory(recipe: Recipe) {
+  const title = getRecipeTitle(recipe);
+  const description = getRecipeDescription(recipe);
+  const text = `${title} ${description}`;
+
+  if (/(dessert|dessert style|cheesecake mousse|mousse)/.test(text)) {
+    return "Dessert";
+  }
+
+  if (/(oats|oatmeal|pancake|breakfast|crepes|breakfast bowl)/.test(title)) {
+    return "Breakfast";
+  }
+
+  if (/(fish|shrimp|prawn|tuna|cod|salmon|halibut|pollock|sablefish|chicken|tofu)/.test(title)) {
+    return "Lunch/Dinner";
+  }
+
+  if (/(cauliflower rice|brussels sprouts|lentil mash)/.test(title)) {
+    return "Side Dish";
+  }
+
+  if (/\bred lentils\b/.test(title) && !/(stew|curry|bake|casserole)/.test(title)) {
+    return "Side Dish";
+  }
+
+  if (/(side dish|side ideas|serve alongside)/.test(text)) {
+    return "Side Dish";
+  }
+
+  return "Lunch/Dinner";
 }
 
 function matchesSearch(recipe: Recipe, searchText: string) {
@@ -304,18 +319,15 @@ function matchesSearch(recipe: Recipe, searchText: string) {
     return true;
   }
 
-  const haystack = normalizeImportedText(
-    [recipe.title, recipe.description, recipe.ingredients, recipe.instructions].join(" ")
-  ).toLowerCase();
-
-  return haystack.includes(searchText.trim().toLowerCase());
+  return getRecipeHaystack(recipe).includes(searchText.trim().toLowerCase());
 }
 
 export default function HomePage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
-  const [fishTypeFilter, setFishTypeFilter] = useState("Any fish");
+  const [proteinTypeFilter, setProteinTypeFilter] = useState("Any Protein");
+  const [fishSubtypeFilter, setFishSubtypeFilter] = useState("Any Fish");
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -365,26 +377,30 @@ export default function HomePage() {
     setDeletingId(null);
   }
 
-  const fishTypeOptions = useMemo(() => {
-    const types = new Set<string>();
+  const fishSubtypeOptions = useMemo(() => {
+    const subtypes = new Set<string>();
 
     for (const recipe of recipes) {
-      for (const fishType of getFishTypes(recipe)) {
-        types.add(fishType);
+      for (const fishSubtype of getFishSubtypes(recipe)) {
+        subtypes.add(fishSubtype);
       }
     }
 
-    return ["Any fish", ...Array.from(types).sort()];
+    return ["Any Fish", ...Array.from(subtypes).sort()];
   }, [recipes]);
 
-  const isFishTypeFilterActive = categoryFilter === "Seafood" && fishTypeFilter !== "Any fish";
+  const isFishSubtypeFilterActive =
+    (proteinTypeFilter === "Fish" || proteinTypeFilter === "Shrimp") && fishSubtypeFilter !== "Any Fish";
 
   const filteredRecipes = recipes.filter((recipe) => {
     const matchesCategory = categoryFilter === "All" || getRecipeCategory(recipe) === categoryFilter;
-    const recipeFishTypes = getFishTypes(recipe);
-    const matchesFishType = !isFishTypeFilterActive || recipeFishTypes.includes(fishTypeFilter);
+    const proteinTypes = getProteinTypes(recipe);
+    const matchesProteinType =
+      proteinTypeFilter === "Any Protein" || proteinTypes.includes(proteinTypeFilter);
+    const matchesFishSubtype =
+      !isFishSubtypeFilterActive || getFishSubtypes(recipe).includes(fishSubtypeFilter);
 
-    return matchesCategory && matchesFishType && matchesSearch(recipe, searchText);
+    return matchesCategory && matchesProteinType && matchesFishSubtype && matchesSearch(recipe, searchText);
   });
 
   return (
@@ -393,7 +409,7 @@ export default function HomePage() {
         <div>
           <h2>Your recipes</h2>
           <p className="muted">
-            Search by name, ingredient, or description. Filter by cookbook category, and narrow seafood recipes by fish type when useful.
+            Search by name, ingredient, or description. Filter by meal category and protein type.
           </p>
           <p className="muted">
             Showing {filteredRecipes.length} recipe{filteredRecipes.length === 1 ? "" : "s"}.
@@ -404,7 +420,7 @@ export default function HomePage() {
           <label className="field">
             Search
             <input
-              placeholder="Try: soup, garlic, lentils..."
+              placeholder="Try: soup, garlic, oats..."
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
             />
@@ -412,10 +428,7 @@ export default function HomePage() {
 
           <label className="field">
             Category
-            <select
-              value={categoryFilter}
-              onChange={(event) => setCategoryFilter(event.target.value)}
-            >
+            <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
               {categoryOptions.map((option) => (
                 <option key={option} value={option}>
                   {option}
@@ -425,13 +438,19 @@ export default function HomePage() {
           </label>
 
           <label className="field">
-            Fish type
+            Protein Type
             <select
-              value={fishTypeFilter}
-              disabled={categoryFilter !== "Seafood"}
-              onChange={(event) => setFishTypeFilter(event.target.value)}
+              value={proteinTypeFilter}
+              onChange={(event) => {
+                const nextProteinType = event.target.value;
+                setProteinTypeFilter(nextProteinType);
+
+                if (nextProteinType !== "Fish" && nextProteinType !== "Shrimp") {
+                  setFishSubtypeFilter("Any Fish");
+                }
+              }}
             >
-              {fishTypeOptions.map((option) => (
+              {proteinTypeOptions.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -440,6 +459,21 @@ export default function HomePage() {
           </label>
         </div>
 
+        {proteinTypeFilter === "Fish" || proteinTypeFilter === "Shrimp" ? (
+          <div className="search-row fish-subtype-row">
+            <label className="field">
+              Fish Subtype
+              <select value={fishSubtypeFilter} onChange={(event) => setFishSubtypeFilter(event.target.value)}>
+                {fishSubtypeOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : null}
+
         <div className="button-row">
           <button
             className="button button-secondary"
@@ -447,7 +481,8 @@ export default function HomePage() {
             onClick={() => {
               setSearchText("");
               setCategoryFilter("All");
-              setFishTypeFilter("Any fish");
+              setProteinTypeFilter("Any Protein");
+              setFishSubtypeFilter("Any Fish");
             }}
           >
             Clear filters
@@ -467,19 +502,26 @@ export default function HomePage() {
           const instructionItems = getInstructionItems(recipe);
           const metaItems = getMetaItems(recipe);
           const recipeCategory = getRecipeCategory(recipe);
-          const fishTypes = getFishTypes(recipe);
+          const proteinTypes = getProteinTypes(recipe);
+          const fishSubtypes = getFishSubtypes(recipe);
 
           return (
             <article key={recipe.id} className="card recipe-card">
               <div className="recipe-card-header">
                 <div className="tag-row">
-                  <div className="protein-pill">Protein: {recipe.protein}</div>
                   <div className="category-pill">Category: {recipeCategory}</div>
-                  {fishTypes.map((fishType) => (
-                    <div key={`${recipe.id}-${fishType}`} className="fish-type-pill">
-                      Fish type: {fishType}
+                  {proteinTypes.map((proteinType) => (
+                    <div key={`${recipe.id}-${proteinType}`} className="protein-pill">
+                      Protein: {proteinType}
                     </div>
                   ))}
+                  {proteinTypes.includes("Fish") || proteinTypes.includes("Shrimp")
+                    ? fishSubtypes.map((fishSubtype) => (
+                        <div key={`${recipe.id}-${fishSubtype}`} className="fish-type-pill">
+                          Fish: {fishSubtype}
+                        </div>
+                      ))
+                    : null}
                 </div>
                 {metaItems.length > 0 ? (
                   <div className="meta-row">

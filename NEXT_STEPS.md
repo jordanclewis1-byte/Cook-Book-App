@@ -1,20 +1,23 @@
-# Next Steps
+﻿# Next Steps
 
 ## Start-of-session reminder
 
 - Git is installed but not on the PowerShell PATH inside Codex.
 - For cookbook work, use C:\Program Files\Git\cmd\git.exe unless the user has added Git to PATH and restarted Codex.
 - Remind Jordan about this at the beginning of the next cookbook session.
+- A Supabase MCP server entry is saved locally in `C:\Users\jorda\.codex\config.toml`, but it still fails auth handshaking. For now, do database work the old way instead of assuming MCP access is available.
 
 ## Current state
 
-Jordan's Cookbook is still a simple Next.js + Supabase app, but the ChatGPT import work is much farther along than before.
+Jordan's Cookbook is still a simple Next.js + Supabase app, but the UI and filtering work are farther along than before.
 
 What it does now:
 
 - Shows recipes from the `recipes` table.
 - Supports keyword search across recipe text.
-- Supports filtering by protein.
+- Supports meal-category filtering with `Lunch/Dinner`, `Side Dish`, `Breakfast`, and `Dessert`.
+- Supports `Protein Type` filtering, including multi-protein tagging in the UI.
+- Supports fish subtype filtering for seafood recipes.
 - Lets you add recipes from a form.
 - Lets you edit recipes.
 - Lets you delete recipes.
@@ -34,44 +37,42 @@ Current architecture:
 Known limitations:
 
 - No authentication
-- No tags or richer categories yet
+- No stored structured fields yet for `category`, `protein_types`, or `fish_subtypes`
 - No recipe photos
-- The UI still renders imported recipe text as raw text blocks
-- Imported markdown and assistant-style formatting still show in the app
+- Filtering still depends on UI heuristics because the live database rows do not yet store the newer structured classification fields
+- Some imported live rows have noisy `protein` values that do not match the final UI behavior
 - 2 hold recipes still remain unresolved because their extracted steps are incomplete
-- Protein filtering does not yet reflect a pescatarian-friendly categorization model
 - Public read/insert/update/delete policies are still very open for an MVP
+- Supabase MCP is configured locally but not authenticated yet
 
 ## What We Learned
 
-- Staging is cumulative: loading new approved rows into `public.recipe_imports` does not replace older approved rows.
-- Title-based dedupe is the right import guard for the current dataset because a single conversation can legitimately generate multiple recipes.
-- Most hold rows can be converted into good import candidates with editorial cleanup, but incomplete extracts should stay out.
-- The approved staging import is now fully represented in `public.recipes`.
+- The live `public.recipes` data is noisier than the reviewed import artifacts, so the UI should not trust the old `protein` field for modern filtering.
+- Multi-protein classification is useful for this cookbook because several recipes genuinely span dairy/eggs or seafood/beans.
+- Parsed ingredients are a better source for protein inference than the full raw import text.
+- Supabase MCP setup is partially in place, but until auth works it should not be counted on for schema/data work.
 
 ## What Was Completed
 
-- Reviewed the staged import candidates and documented the decisions in `data-import/STAGING_REVIEW_2026-03-20.md`.
-- Built a 34-recipe approved import set and corresponding current-schema files.
-- Resolved most hold rows into clean candidate recipes and merged the keepers into the approved set.
-- Left only 2 unresolved hold rows:
-  - `One-Pan Halibut with Leeky Brown Rice`
-  - `High-Protein Egg White Crepes with Ricotta & Berries`
-- Generated `supabase/recipe_imports_load_approved.sql` and loaded the approved rows into staging.
-- Imported the approved staging rows into `public.recipes` with title-based dedupe.
-- Verified there are 0 approved staging titles still missing from `public.recipes`.
+- Cleaned up imported recipe rendering in the UI.
+- Surfaced saved metadata in recipe cards.
+- Reworked browsing around the new meal categories.
+- Added richer protein filtering, including a dedicated shrimp protein type and fish subtype filtering.
+- Added support for multiple protein tags per recipe in the UI.
+- Saved the current checkpoint in git before later filtering work.
+- Attempted Supabase MCP setup and confirmed the current blocker is authentication, not missing config.
 
 ## Recommended Next Steps
 
-1. Clean up imported recipe rendering in the UI by stripping markdown artifacts and assistant CTA text.
-2. Show `servings`, `time_text`, `calories_text`, and `protein_text` in recipe cards or detail sections.
-3. Replace or expand the current protein filter with a more useful pescatarian-friendly classification model.
-4. Decide whether to recover the 2 unresolved hold rows from the original export later.
-5. Decide whether to keep `public.recipe_imports` as a long-term audit log or prune duplicate approved staging rows.
+1. Add explicit database fields for `category`, `protein_types`, and optionally `fish_subtypes` in Supabase.
+2. Backfill those fields for the existing recipes using the current UI rules as a starting point.
+3. Update add/edit recipe flows to save structured category and protein metadata directly.
+4. Revisit Supabase MCP auth only if it becomes worth the setup cost; otherwise continue with manual SQL/database changes.
+5. Hand-tune a few edge-case recipes after the structured fields exist.
 
 ## Suggested Immediate Next Task
 
-The best next task is UI cleanup for imported recipes, followed by surfacing metadata and improving filtering.
+The best next task is moving the current UI classification rules into explicit database fields so filtering becomes stable and maintainable.
 
 ## Session note
 

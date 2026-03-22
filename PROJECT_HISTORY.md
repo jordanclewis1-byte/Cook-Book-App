@@ -1,4 +1,4 @@
-# Project History
+﻿# Project History
 
 ## 2026-03-10: Original cookbook concept
 
@@ -139,6 +139,36 @@ The staged ChatGPT import rows were reviewed in detail, converted into a cleaner
 3. Update the filtering model to better match a pescatarian cookbook instead of the current protein-only taxonomy.
 4. Decide later whether to manually recover the 2 unresolved hold rows from the original ChatGPT export.
 5. Consider whether `public.recipe_imports` should be cleaned up or left as an audit log now that approved rows have been imported.
+
+## 2026-03-22: UI cleanup, richer filtering, and deferred Supabase MCP setup
+
+The home page was upgraded from raw imported text rendering into a cleaner recipe view with structured lists, metadata pills, and multi-dimensional filtering. We also tried wiring up the Supabase MCP server, but Codex still could not complete the auth handshake, so database work should continue through the previous manual path until that is revisited.
+
+### What We Learned
+
+- The live `public.recipes` rows contain noisier imported `protein` values than the reviewed import artifacts, so category and protein filtering cannot safely trust that single field anymore.
+- Parsed ingredient text is a better signal than the full raw import blob when inferring protein types.
+- Some recipes legitimately belong in multiple protein buckets, especially breakfast dishes that combine dairy and eggs and seafood mains that also include beans or lentils.
+- Codex now has a saved Supabase MCP server entry in local config, but the current setup still returns `Auth required` during MCP initialization.
+
+### What Was Completed
+
+- Added cleaner imported recipe rendering on the home page with list-style ingredients and instructions.
+- Surfaced saved recipe metadata like servings, time, calories, and protein in the UI.
+- Reworked the browsing model from the earlier protein-only filter into explicit meal categories: `Lunch/Dinner`, `Side Dish`, `Breakfast`, and `Dessert`.
+- Added a richer `Protein Type` filter with support for multiple protein tags per recipe.
+- Split shrimp into its own protein type and kept fish-specific subtype filtering for seafood recipes.
+- Added a checkpoint git commit before the newer filtering work: `c4f7ab0 Improve recipe parsing and filtering`.
+- Saved a Supabase MCP server entry in `C:\Users\jorda\.codex\config.toml` using the hosted project-scoped URL in read-only mode.
+- Confirmed the current MCP setup is not authenticated yet, so no database-side MCP work was performed.
+
+### Recommended Next Steps
+
+1. Add explicit database fields for `category`, `protein_types`, and optionally `fish_subtypes` so the app no longer depends on heuristics alone.
+2. Backfill those new fields for the current recipes using the classification rules we developed in the UI.
+3. Update the add/edit recipe flows so future recipes save structured category and protein metadata directly.
+4. Revisit Supabase MCP auth in a future session only if it will materially speed up schema/data work; otherwise continue using the existing manual SQL path.
+5. Decide whether a few edge-case recipes should be hand-tuned after the database fields exist.
 
 ## Repo convention going forward
 
