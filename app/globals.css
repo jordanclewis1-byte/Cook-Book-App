@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --background: #f6f1e8;
   --card: #fffaf2;
   --border: #d5c3a7;
@@ -93,25 +93,79 @@ select {
   gap: 1rem;
 }
 
+.recipe-card {
+  gap: 1rem;
+}
+
 .recipe-card h2,
-.recipe-card h3 {
+.recipe-card h3,
+.recipe-card h4 {
   margin-top: 0;
 }
 
-.protein-pill {
+.recipe-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.protein-pill,
+.category-pill,
+.fish-type-pill {
   display: inline-block;
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.protein-pill {
   background: #f2ddcb;
   color: var(--accent-dark);
-  font-size: 0.9rem;
-  margin-bottom: 0.75rem;
+}
+
+.category-pill {
+  background: #efe8d8;
+  color: #5f533d;
+}
+
+.fish-type-pill {
+  background: #e2ecef;
+  color: #33515e;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fffdf9;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .search-row {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 1rem;
+}
+
+.search-row-wide {
+  grid-template-columns: 2fr 1fr 1fr;
 }
 
 .field {
@@ -189,9 +243,25 @@ select {
   gap: 1rem;
 }
 
+.recipe-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.recipe-list li {
+  line-height: 1.45;
+}
+
+.recipe-steps {
+  padding-left: 1.35rem;
+}
+
 @media (max-width: 720px) {
   .site-header,
   .search-row,
+  .search-row-wide,
   .two-column {
     grid-template-columns: 1fr;
     display: grid;
