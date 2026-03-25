@@ -7,6 +7,9 @@ create table if not exists public.recipes (
   description text not null,
   ingredients text not null,
   instructions text not null,
+  category text,
+  protein_types text[] not null default '{}'::text[],
+  fish_subtypes text[] not null default '{}'::text[],
   servings text,
   time_text text,
   calories_text text,
@@ -18,6 +21,9 @@ create table if not exists public.recipes (
 );
 
 alter table public.recipes
+  add column if not exists category text,
+  add column if not exists protein_types text[] not null default '{}'::text[],
+  add column if not exists fish_subtypes text[] not null default '{}'::text[],
   add column if not exists servings text,
   add column if not exists time_text text,
   add column if not exists calories_text text,
@@ -58,20 +64,35 @@ for delete
 to anon
 using (true);
 
-insert into public.recipes (title, protein, description, ingredients, instructions)
+insert into public.recipes (
+  title,
+  protein,
+  description,
+  ingredients,
+  instructions,
+  category,
+  protein_types,
+  fish_subtypes
+)
 values
   (
     'Chicken Tacos',
     'Chicken',
     'Quick tacos for weeknights.',
     '- 1 lb chicken' || E'\n' || '- 1 taco seasoning packet' || E'\n' || '- Tortillas' || E'\n' || '- Toppings you like',
-    '1. Cook the chicken.' || E'\n' || '2. Add seasoning.' || E'\n' || '3. Fill tortillas and serve.'
+    '1. Cook the chicken.' || E'\n' || '2. Add seasoning.' || E'\n' || '3. Fill tortillas and serve.',
+    'Lunch/Dinner',
+    array['Chicken']::text[],
+    '{}'::text[]
   ),
   (
     'Bean Chili',
     'Beans',
     'Simple vegetarian chili.',
     '- 2 cans beans' || E'\n' || '- 1 onion' || E'\n' || '- 1 can tomatoes' || E'\n' || '- Chili powder',
-    '1. Cook onion.' || E'\n' || '2. Add everything else.' || E'\n' || '3. Simmer for 20 minutes.'
+    '1. Cook onion.' || E'\n' || '2. Add everything else.' || E'\n' || '3. Simmer for 20 minutes.',
+    'Lunch/Dinner',
+    array['Beans/Lentils']::text[],
+    '{}'::text[]
   )
 on conflict do nothing;

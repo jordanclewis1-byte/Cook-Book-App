@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:reset": "node scripts/dev-reset.js",
+    "dev:status": "node scripts/dev-status.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

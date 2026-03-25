@@ -4,4 +4,6 @@ node_modules
 chatgpt-export/
 tools/
 tsconfig.tsbuildinfo
+dev-server.out.log
+dev-server.err.log
 

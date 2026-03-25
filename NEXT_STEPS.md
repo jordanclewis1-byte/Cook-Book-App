@@ -5,7 +5,40 @@
 - Git is installed but not on the PowerShell PATH inside Codex.
 - For cookbook work, use C:\Program Files\Git\cmd\git.exe unless the user has added Git to PATH and restarted Codex.
 - Remind Jordan about this at the beginning of the next cookbook session.
+- Make Supabase MCP setup/auth a deliberate action item next session before deciding whether it is worth finishing.
 - A Supabase MCP server entry is saved locally in `C:\Users\jorda\.codex\config.toml`, but it still fails auth handshaking. For now, do database work the old way instead of assuming MCP access is available.
+- If `localhost:3000` looks dead, try `npm run dev:reset` before deeper debugging. It clears stale `.next` output, frees port `3000`, and starts a fresh dev server.
+- Use `npm run dev:status` to quickly check whether the local dev server is healthy, stale, or not running before restarting things.
+
+## 2026-03-24: Structured recipe metadata wiring
+
+The app now has a shared metadata layer for recipe classification, and the add/edit flows are wired to save the newer structured cookbook fields instead of only the old single `protein` value.
+
+### What We Learned
+
+- The homepage heuristics were stable enough to promote into a shared utility layer without changing the browsing behavior.
+- Keeping the legacy `protein` column populated is the safest bridge while the database and UI transition to structured metadata.
+- A manual SQL backfill script is the best fit for now because Supabase MCP still is not authenticated in this environment.
+
+### What Was Completed
+
+- Moved recipe text cleanup, parsing, and classification helpers into `lib/recipe-metadata.ts`.
+- Updated the home page to prefer stored `category`, `protein_types`, and `fish_subtypes` values, while still falling back to inference for older rows.
+- Updated the add recipe flow to save structured category, protein type, and fish subtype metadata.
+- Updated the edit recipe flow to load inferred metadata for older rows and save the structured fields on update.
+- Extended shared recipe types with `category`, `protein_types`, and `fish_subtypes`.
+- Extended `supabase/schema.sql` with the new structured metadata columns.
+- Added `supabase/recipe_metadata_backfill.sql` to backfill existing rows using the current cookbook heuristics.
+- Fixed the homepage parser so imported recipes with duplicated raw blobs do not render ingredient lists as fake instructions.
+- Added `npm run dev:reset` and `npm run dev:status` to make the local Next dev server more reliable across sessions.
+
+### Recommended Next Steps
+
+1. Run `supabase/recipe_metadata_backfill.sql` in Supabase so the live rows get the new structured fields.
+2. Spot-check a handful of edge-case recipes after the backfill, especially breakfast and seafood recipes with multiple protein tags.
+3. Do a pre-deploy cleanup pass on imported rows whose `ingredients` and `instructions` still store the same full raw recipe blob.
+4. Refresh `README.md` so it reflects the current filtering and metadata model instead of the older MVP-only description.
+5. Make Supabase MCP auth/setup the first explicit investigation item next session, then decide whether to keep using manual SQL or switch workflows.
 
 ## Current state
 
@@ -21,6 +54,7 @@ What it does now:
 - Lets you add recipes from a form.
 - Lets you edit recipes.
 - Lets you delete recipes.
+- Saves structured `category`, `protein_types`, and `fish_subtypes` metadata for newly added or edited recipes.
 - Stores reviewed import rows in `public.recipe_imports` as staging and audit data.
 - Stores imported metadata in `public.recipes`, including `servings`, `time_text`, `calories_text`, `protein_text`, `source_type`, `source_conversation_id`, and `raw_import_text`.
 - Includes a generated approved import set in `data-import/recipes-project-approved.*`.
@@ -37,9 +71,9 @@ Current architecture:
 Known limitations:
 
 - No authentication
-- No stored structured fields yet for `category`, `protein_types`, or `fish_subtypes`
+- Existing live rows still need the structured metadata backfill applied in Supabase
 - No recipe photos
-- Filtering still depends on UI heuristics because the live database rows do not yet store the newer structured classification fields
+- Filtering still falls back to UI heuristics for older rows until the database backfill is run
 - Some imported live rows have noisy `protein` values that do not match the final UI behavior
 - 2 hold recipes still remain unresolved because their extracted steps are incomplete
 - Public read/insert/update/delete policies are still very open for an MVP
@@ -64,15 +98,15 @@ Known limitations:
 
 ## Recommended Next Steps
 
-1. Add explicit database fields for `category`, `protein_types`, and optionally `fish_subtypes` in Supabase.
-2. Backfill those fields for the existing recipes using the current UI rules as a starting point.
-3. Update add/edit recipe flows to save structured category and protein metadata directly.
-4. Revisit Supabase MCP auth only if it becomes worth the setup cost; otherwise continue with manual SQL/database changes.
-5. Hand-tune a few edge-case recipes after the structured fields exist.
+1. Run the structured metadata backfill against the live Supabase project.
+2. Hand-tune a few edge-case recipes after the backfill lands.
+3. Do a pre-deploy cleanup pass for imported recipes whose ingredient and instruction fields still contain the same raw blob.
+4. Refresh `README.md` to match the current app.
+5. Revisit Supabase MCP auth next session as an explicit setup task; otherwise continue with manual SQL/database changes.
 
 ## Suggested Immediate Next Task
 
-The best next task is moving the current UI classification rules into explicit database fields so filtering becomes stable and maintainable.
+The best next task is applying the structured metadata backfill in Supabase and then spot-checking the recipes that are most likely to need manual cleanup.
 
 ## Session note
 

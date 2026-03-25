@@ -1,318 +1,24 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import {
+  categoryOptions,
+  getFishSubtypes,
+  getIngredientItems,
+  getInstructionItems,
+  getMetaItems,
+  getProteinTypes,
+  getRecipeCategory,
+  getRecipeHaystack,
+  normalizeImportedText,
+  proteinTypeOptions
+} from "@/lib/recipe-metadata";
 import type { Recipe } from "@/lib/types";
 
-const categoryOptions = ["All", "Lunch/Dinner", "Side Dish", "Breakfast", "Dessert"];
-
-const proteinTypeOptions = [
-  "Any Protein",
-  "Fish",
-  "Shrimp",
-  "Beans/Lentils",
-  "Tofu",
-  "Eggs",
-  "Dairy",
-  "Chicken",
-  "None/Vegetable"
-];
-
-const fishSubtypeDefinitions = [
-  { label: "Cod", patterns: [/\bcod\b/] },
-  { label: "Salmon", patterns: [/\bsalmon\b/] },
-  { label: "Halibut", patterns: [/\bhalibut\b/] },
-  { label: "Tuna", patterns: [/\btuna\b/] },
-  { label: "Pollock", patterns: [/\bpollock\b/] },
-  { label: "Sablefish", patterns: [/\bsablefish\b/, /\bblack cod\b/] },
-  { label: "Generic Fish", patterns: [/\bfish\b/, /\bwhite fish\b/] }
-];
-
-const mojibakeReplacements: Array<[string, string]> = [
-  ["\u00e2\u20ac\u2122", "'"],
-  ["\u00e2\u20ac\u0153", '"'],
-  ["\u00e2\u20ac\ufffd", '"'],
-  ["\u00e2\u20ac\u201c", "-"],
-  ["\u00e2\u20ac\u201d", "-"],
-  ["\u00e2\u20ac\u00a2", "-"],
-  ["\u00e2\u20ac\u00a6", "..."],
-  ["\u00c2\u00bd", "1/2"],
-  ["\u00c2\u00bc", "1/4"],
-  ["\u00c2\u00be", "3/4"],
-  ["\u00c2\u00b0", " deg"],
-  ["\u00c2", ""],
-  ["\u00c3\u00a9", "e"],
-  ["\u00c3", "a"],
-  ["\u00f0\u0178\u2018\u2030", ""],
-  ["\u00f0\u0178\u201c\u009d", ""],
-  ["\u00f0\u0178\u2018\u00a9\u00e2\u20ac\u008d\u00f0\u0178\u008d\u00b3", ""]
-];
-
-function normalizeImportedText(text: string) {
-  let normalized = text.replace(/\r/g, "");
-
-  for (const [from, to] of mojibakeReplacements) {
-    normalized = normalized.replaceAll(from, to);
-  }
-
-  return normalized
-    .replace(/^TO REVIEW:.*$/gim, "")
-    .replace(/^Perfect\s+(?:-|\u2014).*$/gim, "")
-    .replace(/^Would you like me to.*$/gim, "")
-    .replace(/^### Want to optimize further[\s\S]*$/gim, "")
-    .replace(/^### Want a direction[\s\S]*$/gim, "")
-    .replace(/\*\((.*?)\)\*/g, "$1")
-    .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/\*(.*?)\*/g, "$1")
-    .replace(/^---$/gm, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function normalizeHeadingText(text: string) {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-}
-
-function extractSection(text: string, heading: string) {
-  const lines = normalizeImportedText(text).split("\n");
-  const target = normalizeHeadingText(heading);
-  const sectionLines: string[] = [];
-  let capture = false;
-
-  for (const line of lines) {
-    const headingMatch = line.match(/^#{1,6}\s*(.*?)\s*$/);
-
-    if (headingMatch) {
-      const normalizedHeading = normalizeHeadingText(headingMatch[1]);
-
-      if (capture) {
-        break;
-      }
-
-      if (normalizedHeading.startsWith(target)) {
-        capture = true;
-      }
-
-      continue;
-    }
-
-    if (capture) {
-      sectionLines.push(line);
-    }
-  }
-
-  return sectionLines.join("\n").trim();
-}
-
-function isIgnoredLine(line: string) {
-  const lower = line.toLowerCase();
-  return [
-    "why this works",
-    "how to make",
-    "how",
-    "quick miso butter",
-    "method",
-    "tips",
-    "main",
-    "staples",
-    "finish",
-    "serve with",
-    "optional upgrade"
-  ].some((prefix) => lower === prefix || lower.startsWith(`${prefix}:`));
-}
-
-function cleanLine(line: string) {
-  return line.replace(/\s{2,}/g, " ").trim();
-}
-
-function parseIngredientItems(text: string) {
-  return text
-    .split("\n")
-    .map((line) => cleanLine(line.replace(/^\s*[-*]\s*/, "")))
-    .filter(Boolean)
-    .filter((line) => !isIgnoredLine(line))
-    .filter((line) => !/^#{1,6}\s*/.test(line))
-    .filter((line) => !/^\d+\.\s*/.test(line));
-}
-
-function parseInstructionItems(text: string) {
-  const lines = text.split("\n");
-  const items: string[] = [];
-  let currentStep = "";
-
-  for (const line of lines) {
-    const numberedMatch = line.match(/^\s*(\d+)\.\s*(.*)$/);
-    const bulletMatch = line.match(/^\s*[-*]\s*(.*)$/);
-    const cleaned = cleanLine(line);
-
-    if (!cleaned || isIgnoredLine(cleaned) || /^#{1,6}\s*/.test(cleaned)) {
-      continue;
-    }
-
-    if (numberedMatch) {
-      if (currentStep) {
-        items.push(currentStep);
-      }
-
-      currentStep = cleanLine(numberedMatch[2]);
-      continue;
-    }
-
-    const continuation = bulletMatch ? cleanLine(bulletMatch[1]) : cleaned;
-
-    if (!continuation) {
-      continue;
-    }
-
-    if (currentStep) {
-      currentStep = `${currentStep} ${continuation}`.trim();
-    } else {
-      items.push(continuation);
-    }
-  }
-
-  if (currentStep) {
-    items.push(currentStep);
-  }
-
-  return items;
-}
-
-function getIngredientItems(recipe: Recipe) {
-  const normalized = normalizeImportedText(recipe.ingredients);
-  const section = extractSection(normalized, "Ingredients");
-  return parseIngredientItems(section || normalized);
-}
-
-function getInstructionItems(recipe: Recipe) {
-  const normalized = normalizeImportedText(recipe.instructions);
-  const section = extractSection(normalized, "Instructions");
-  return parseInstructionItems(section || normalized);
-}
-
-function getMetaItems(recipe: Recipe) {
-  return [
-    recipe.servings ? `Servings: ${recipe.servings}` : null,
-    recipe.time_text ? `Time: ${recipe.time_text}` : null,
-    recipe.calories_text ? `Calories: ${normalizeImportedText(recipe.calories_text)}` : null,
-    recipe.protein_text ? `Protein: ${normalizeImportedText(recipe.protein_text)}` : null
-  ].filter(Boolean) as string[];
-}
-
-function getRecipeTitle(recipe: Recipe) {
-  return normalizeImportedText(recipe.title).toLowerCase();
-}
-
-function getRecipeDescription(recipe: Recipe) {
-  return normalizeImportedText(recipe.description).toLowerCase();
-}
-
-function getRecipeHaystack(recipe: Recipe) {
-  return normalizeImportedText(
-    [recipe.title, recipe.description, recipe.ingredients, recipe.instructions].join(" ")
-  ).toLowerCase();
-}
-
-function getProteinSourceText(recipe: Recipe) {
-  return [getRecipeTitle(recipe), ...getIngredientItems(recipe).map((item) => item.toLowerCase())].join(" ");
-}
-
-function getProteinTypes(recipe: Recipe) {
-  const title = getRecipeTitle(recipe);
-  const description = getRecipeDescription(recipe);
-  const proteinSourceText = getProteinSourceText(recipe);
-  const proteinTypes = new Set<string>();
-
-  if (/\bshrimp\b|\bprawn(?:s)?\b/.test(title) || /\bshrimp\b|\bprawn(?:s)?\b/.test(proteinSourceText)) {
-    proteinTypes.add("Shrimp");
-  }
-
-  if (/(\bfish\b|cod|salmon|halibut|tuna|pollock|sablefish|seafood)/.test(title)) {
-    proteinTypes.add("Fish");
-  }
-
-  if (/(\bfish\b|cod|salmon|halibut|tuna|pollock|sablefish|seafood)/.test(proteinSourceText)) {
-    proteinTypes.add("Fish");
-  }
-
-  if (/\btofu\b/.test(title) || /\btofu\b/.test(proteinSourceText) || recipe.protein === "Tofu") {
-    proteinTypes.add("Tofu");
-  }
-
-  if (/\bchicken\b/.test(title) || /\bchicken\b/.test(proteinSourceText) || recipe.protein === "Chicken") {
-    proteinTypes.add("Chicken");
-  }
-
-  if (/(lentils|chickpeas|white bean|black bean|cannellini|butter beans|beans\b)/.test(title) || /(lentils|chickpeas|white bean|black bean|cannellini|butter beans|beans\b)/.test(proteinSourceText) || recipe.protein === "Beans") {
-    proteinTypes.add("Beans/Lentils");
-  }
-
-  if (/(egg white|egg whites|whole egg|eggs\b|crepes)/.test(title + " " + proteinSourceText)) {
-    proteinTypes.add("Eggs");
-  }
-
-  if (/(dessert style|breakfast bowl|ricotta|cottage cheese|greek yogurt|yogurt|cheesecake)/.test(title + " " + description) || /(ricotta|cottage cheese|greek yogurt|yogurt|feta|mozzarella|cheesecake)/.test(proteinSourceText)) {
-    proteinTypes.add("Dairy");
-  }
-
-  if (proteinTypes.size === 0) {
-    proteinTypes.add("None/Vegetable");
-  }
-
-  return Array.from(proteinTypes);
-}
-
-function getFishSubtypes(recipe: Recipe) {
-  const proteinTypes = getProteinTypes(recipe);
-
-  if (!proteinTypes.includes("Fish") && !proteinTypes.includes("Shrimp")) {
-    return [] as string[];
-  }
-
-  const proteinSourceText = getProteinSourceText(recipe);
-  const matches = fishSubtypeDefinitions
-    .filter((definition) => definition.patterns.some((pattern) => pattern.test(proteinSourceText)))
-    .map((definition) => definition.label);
-
-  if (proteinTypes.includes("Shrimp") && !matches.includes("Shrimp")) {
-    matches.push("Shrimp");
-  }
-
-  return matches.length > 0 ? matches : proteinTypes.includes("Fish") ? ["Generic Fish"] : ["Shrimp"];
-}
-
-function getRecipeCategory(recipe: Recipe) {
-  const title = getRecipeTitle(recipe);
-  const description = getRecipeDescription(recipe);
-  const text = `${title} ${description}`;
-
-  if (/(dessert|dessert style|cheesecake mousse|mousse)/.test(text)) {
-    return "Dessert";
-  }
-
-  if (/(oats|oatmeal|pancake|breakfast|crepes|breakfast bowl)/.test(title)) {
-    return "Breakfast";
-  }
-
-  if (/(fish|shrimp|prawn|tuna|cod|salmon|halibut|pollock|sablefish|chicken|tofu)/.test(title)) {
-    return "Lunch/Dinner";
-  }
-
-  if (/(cauliflower rice|brussels sprouts|lentil mash)/.test(title)) {
-    return "Side Dish";
-  }
-
-  if (/\bred lentils\b/.test(title) && !/(stew|curry|bake|casserole)/.test(title)) {
-    return "Side Dish";
-  }
-
-  if (/(side dish|side ideas|serve alongside)/.test(text)) {
-    return "Side Dish";
-  }
-
-  return "Lunch/Dinner";
-}
+const categoryFilterOptions = ["All", ...categoryOptions];
+const proteinFilterOptions = ["Any Protein", ...proteinTypeOptions];
 
 function matchesSearch(recipe: Recipe, searchText: string) {
   if (!searchText.trim()) {
@@ -429,7 +135,7 @@ export default function HomePage() {
           <label className="field">
             Category
             <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
-              {categoryOptions.map((option) => (
+              {categoryFilterOptions.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -450,7 +156,7 @@ export default function HomePage() {
                 }
               }}
             >
-              {proteinTypeOptions.map((option) => (
+              {proteinFilterOptions.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>

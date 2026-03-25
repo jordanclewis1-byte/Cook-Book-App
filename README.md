@@ -91,6 +91,22 @@ Run:
 npm run dev
 ```
 
+If `localhost:3000` stops loading but a Node process is still hanging around, use:
+
+```bash
+npm run dev:reset
+```
+
+This clears the local `.next` build output, frees port `3000`, and starts a clean Next.js dev server.
+
+To check whether the dev server is healthy without guessing, use:
+
+```bash
+npm run dev:status
+```
+
+It will tell you whether the app is healthy, stale, or not running and suggest the next command to use.
+
 Then open:
 
 ```text

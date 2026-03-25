@@ -170,6 +170,36 @@ The home page was upgraded from raw imported text rendering into a cleaner recip
 4. Revisit Supabase MCP auth in a future session only if it will materially speed up schema/data work; otherwise continue using the existing manual SQL path.
 5. Decide whether a few edge-case recipes should be hand-tuned after the database fields exist.
 
+## 2026-03-24: Structured metadata saved through the app
+
+The recipe classification logic was moved into a shared helper layer, and the add/edit flows now save structured metadata fields so the UI is no longer the only place that knows about category and multi-protein tagging.
+
+### What We Learned
+
+- The filtering heuristics from the home page were consistent enough to reuse across display, edit defaults, and database backfill logic.
+- Keeping the legacy `protein` column in sync provides a safe compatibility bridge while moving the real filtering model to arrays and categories.
+- Since Supabase MCP still is not authenticated here, a checked-in SQL backfill is the lowest-friction way to finish the database side of this milestone.
+
+### What Was Completed
+
+- Added `lib/recipe-metadata.ts` to centralize imported-text cleanup, list parsing, and recipe classification.
+- Updated the home page to read stored `category`, `protein_types`, and `fish_subtypes` when present, with inference retained as a fallback for old rows.
+- Updated the add recipe page to save explicit category, protein type, and fish subtype metadata.
+- Updated the edit recipe page to prefill structured metadata for older recipes and save it on update.
+- Extended the shared recipe types with structured metadata fields.
+- Updated `supabase/schema.sql` with `category`, `protein_types`, and `fish_subtypes`.
+- Added `supabase/recipe_metadata_backfill.sql` so existing live rows can be backfilled through the manual SQL path.
+- Tightened the homepage parser so imported recipes with duplicated raw text no longer show ingredient bullets as instruction steps.
+- Added `npm run dev:reset` and `npm run dev:status` to recover and check the local Next dev server more reliably.
+
+### Recommended Next Steps
+
+1. Run the new metadata backfill SQL in Supabase.
+2. Spot-check and hand-tune a few edge-case recipes after the backfill.
+3. Do a pre-deploy cleanup pass on imported recipes whose `ingredients` and `instructions` still contain the same raw recipe blob.
+4. Refresh the README so it reflects the current app instead of the original MVP.
+5. Make Supabase MCP setup/auth the first explicit action item next session and then decide whether it is worth adopting.
+
 ## Repo convention going forward
 
 For future major milestones, record a short dated entry in `PROJECT_HISTORY.md` and include these sections:

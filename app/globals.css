@@ -173,6 +173,17 @@ select {
   gap: 0.4rem;
 }
 
+.option-group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.option-group legend {
+  padding: 0;
+  margin-bottom: 0.4rem;
+}
+
 .field input,
 .field textarea,
 .field select {
@@ -186,6 +197,27 @@ select {
 .field textarea {
   min-height: 140px;
   resize: vertical;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.75rem;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fffdf9;
+}
+
+.checkbox-option input {
+  width: auto;
+  margin: 0;
 }
 
 .button {

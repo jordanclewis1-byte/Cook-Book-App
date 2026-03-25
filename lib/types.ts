@@ -5,6 +5,9 @@ export type Recipe = {
   description: string;
   ingredients: string;
   instructions: string;
+  category: string | null;
+  protein_types: string[] | null;
+  fish_subtypes: string[] | null;
   servings: string | null;
   time_text: string | null;
   calories_text: string | null;
@@ -17,5 +20,12 @@ export type Recipe = {
 
 export type RecipeFormData = Pick<
   Recipe,
-  "title" | "protein" | "description" | "ingredients" | "instructions"
+  | "title"
+  | "protein"
+  | "description"
+  | "ingredients"
+  | "instructions"
+  | "category"
+  | "protein_types"
+  | "fish_subtypes"
 >;
