@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { recipeWritesEnabled } from "@/lib/app-config";
 import { supabase } from "@/lib/supabase";
 import {
   categoryOptions,
@@ -36,6 +38,22 @@ export default function AddRecipePage() {
 
   const showsFishSubtypeField =
     selectedProteinTypes.includes("Fish") || selectedProteinTypes.includes("Shrimp");
+
+  if (!recipeWritesEnabled) {
+    return (
+      <section className="card stack">
+        <div>
+          <h2>Add a recipe</h2>
+          <p className="muted">Recipe editing is disabled in this deployment.</p>
+        </div>
+        <div className="button-row">
+          <Link className="button button-secondary" href="/">
+            Back to recipes
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

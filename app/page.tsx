@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { recipeWritesEnabled } from "@/lib/app-config";
 import { supabase } from "@/lib/supabase";
 import {
   categoryOptions,
@@ -262,17 +263,21 @@ export default function HomePage() {
               </div>
 
               <div className="button-row">
-                <Link className="button button-secondary" href={`/edit-recipe/${recipe.id}`}>
-                  Edit
-                </Link>
-                <button
-                  className="button button-danger"
-                  type="button"
-                  disabled={deletingId === recipe.id}
-                  onClick={() => handleDelete(recipe.id)}
-                >
-                  {deletingId === recipe.id ? "Deleting..." : "Delete"}
-                </button>
+                {recipeWritesEnabled ? (
+                  <>
+                    <Link className="button button-secondary" href={`/edit-recipe/${recipe.id}`}>
+                      Edit
+                    </Link>
+                    <button
+                      className="button button-danger"
+                      type="button"
+                      disabled={deletingId === recipe.id}
+                      onClick={() => handleDelete(recipe.id)}
+                    >
+                      {deletingId === recipe.id ? "Deleting..." : "Delete"}
+                    </button>
+                  </>
+                ) : null}
               </div>
             </article>
           );

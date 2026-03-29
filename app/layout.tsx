@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { recipeWritesEnabled } from "@/lib/app-config";
 
 export const metadata: Metadata = {
   title: "Jordan's Cookbook",
@@ -23,7 +24,7 @@ export default function RootLayout({
             </div>
             <nav className="nav-links">
               <Link href="/">Recipes</Link>
-              <Link href="/add-recipe">Add Recipe</Link>
+              {recipeWritesEnabled ? <Link href="/add-recipe">Add Recipe</Link> : null}
             </nav>
           </header>
           <main>{children}</main>

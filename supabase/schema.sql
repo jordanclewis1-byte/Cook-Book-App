@@ -38,6 +38,9 @@ drop policy if exists "Allow public read recipes" on public.recipes;
 drop policy if exists "Allow public insert recipes" on public.recipes;
 drop policy if exists "Allow public update recipes" on public.recipes;
 drop policy if exists "Allow public delete recipes" on public.recipes;
+drop policy if exists "Allow authenticated insert recipes" on public.recipes;
+drop policy if exists "Allow authenticated update recipes" on public.recipes;
+drop policy if exists "Allow authenticated delete recipes" on public.recipes;
 
 create policy "Allow public read recipes"
 on public.recipes
@@ -45,23 +48,23 @@ for select
 to anon
 using (true);
 
-create policy "Allow public insert recipes"
+create policy "Allow authenticated insert recipes"
 on public.recipes
 for insert
-to anon
+to authenticated
 with check (true);
 
-create policy "Allow public update recipes"
+create policy "Allow authenticated update recipes"
 on public.recipes
 for update
-to anon
+to authenticated
 using (true)
 with check (true);
 
-create policy "Allow public delete recipes"
+create policy "Allow authenticated delete recipes"
 on public.recipes
 for delete
-to anon
+to authenticated
 using (true);
 
 insert into public.recipes (

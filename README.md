@@ -1,163 +1,163 @@
 # Jordan's Cookbook
 
-A very simple personal cookbook app built with Next.js and Supabase.
+A personal cookbook app built with Next.js and Supabase for browsing, cleaning up, and maintaining recipes imported from a ChatGPT recipe project plus manually added recipes.
 
-## Project memory
+## Project Memory
 
-For recovered context from earlier sessions and a stable summary of where the project stands now, start with:
+If you are resuming work after a gap, start with:
 
 - `PROJECT_HISTORY.md`
 - `NEXT_STEPS.md`
 
-## What this app does
+Those files are the durable session memory for this repo.
 
-This MVP currently does 4 things:
+## Current App Status
 
-1. Shows your recipes
-2. Lets you search and filter recipes, especially by protein
-3. Lets you add new recipes
-4. Lets you edit or delete existing recipes
+The app is past the original MVP and now supports:
 
-There is no authentication, no AI search, and no extra architecture yet.
+1. Browsing recipes from Supabase on the home page
+2. Keyword search across recipe title, description, ingredients, and instructions
+3. Meal-category filtering with `Lunch/Dinner`, `Side Dish`, `Breakfast`, and `Dessert`
+4. Protein-type filtering with multi-select metadata
+5. Fish subtype filtering for seafood recipes
+6. Adding new recipes
+7. Editing existing recipes
+8. Deleting recipes
+9. Cleaner rendering of imported recipes with parsed ingredients, instructions, and metadata pills
 
-## Project structure
+The app still has no authentication and still uses a simple browser-side Supabase client for CRUD.
 
-- `app/layout.tsx`
-  The main page shell. This adds the site title and top navigation.
+## Current Data Model
+
+The main table is `public.recipes`.
+
+Important fields currently used by the app:
+
+- Core recipe fields: `title`, `description`, `ingredients`, `instructions`
+- Legacy compatibility field: `protein`
+- Structured metadata fields: `category`, `protein_types`, `fish_subtypes`
+- Imported metadata fields: `servings`, `time_text`, `calories_text`, `protein_text`
+- Import audit fields: `source_type`, `source_conversation_id`, `raw_import_text`
+
+The app prefers the structured metadata fields when they exist and falls back to shared inference logic for older rows.
+
+There is also a staging/audit table, `public.recipe_imports`, used during the ChatGPT recipe import workflow.
+
+## Project Structure
 
 - `app/page.tsx`
-  The home page. This loads recipes from Supabase, lets you search/filter them, and now exposes edit/delete actions.
+  Home page that loads recipes, applies search/filter state, and renders cleaned recipe cards.
 
 - `app/add-recipe/page.tsx`
-  The add recipe page. This has a simple form that saves a recipe to Supabase.
+  Add form for creating recipes with category, protein type, and optional fish subtype metadata.
 
 - `app/edit-recipe/[id]/page.tsx`
-  The edit recipe page. This loads one recipe, lets you update it, and saves changes to Supabase.
+  Edit form for updating recipes and structured metadata.
+
+- `app/layout.tsx`
+  Shared page shell and navigation.
 
 - `app/globals.css`
-  Basic styling for the whole app.
+  Global styling for the app.
 
 - `lib/supabase.ts`
-  Creates the Supabase client so the app can talk to your database.
+  Shared browser-side Supabase client.
 
 - `lib/types.ts`
-  Shared TypeScript types for recipes and recipe form data.
+  Shared TypeScript recipe types.
+
+- `lib/recipe-metadata.ts`
+  Shared cleanup, parsing, and classification helpers for imported and manually entered recipes.
 
 - `supabase/schema.sql`
-  SQL you can paste into the Supabase SQL Editor to create your table and sample data.
+  Base schema and setup SQL for the cookbook app.
 
-- `.env.local.example`
-  Example environment variables. Copy this to `.env.local` and add your real Supabase values.
+- `supabase/recipe_metadata_backfill.sql`
+  Backfill SQL for adding and populating structured metadata on existing live rows.
 
-## Step-by-step setup
+- `supabase/recipe_imports_load.sql`
+  Helper SQL for loading staged recipe-import rows.
 
-### 1. Install packages
+- `supabase/recipe_imports_load_approved.sql`
+  Helper SQL for loading the approved import set into staging.
 
-Open a terminal in this folder and run:
+- `data-import/`
+  Checked-in import artifacts, review outputs, approved recipe sets, and hold-resolution files.
+
+- `scripts/dev-status.ps1`
+  Checks whether the local dev server is healthy, stale, or missing.
+
+- `scripts/dev-reset.ps1`
+  Stops stale processes on port `3000`, clears `.next`, and starts a clean dev server.
+
+## Local Setup
+
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Create a Supabase project
+### 2. Configure Supabase
 
-In Supabase:
+Create a Supabase project, then run the SQL from `supabase/schema.sql` in the Supabase SQL Editor.
 
-1. Create a new project
-2. Open the SQL Editor
-3. Paste everything from `supabase/schema.sql`
-4. Run the SQL
-
-This creates the `recipes` table and adds 2 sample recipes.
+If you already have the cookbook project set up, keep using that same project and schema.
 
 ### 3. Add environment variables
 
-Copy `.env.local.example` to `.env.local`.
-
-Then add:
+Copy `.env.local.example` to `.env.local` and set:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-real-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-real-anon-key
 ```
 
-You can find these in Supabase under Project Settings > API.
+Use the publishable/anon key here, not a secret service-role key.
 
 ### 4. Start the app
-
-Run:
 
 ```bash
 npm run dev
 ```
 
-If `localhost:3000` stops loading but a Node process is still hanging around, use:
+Then open [http://localhost:3000](http://localhost:3000).
 
-```bash
-npm run dev:reset
-```
-
-This clears the local `.next` build output, frees port `3000`, and starts a clean Next.js dev server.
-
-To check whether the dev server is healthy without guessing, use:
+If the dev server looks unhealthy or stale, use:
 
 ```bash
 npm run dev:status
 ```
 
-It will tell you whether the app is healthy, stale, or not running and suggest the next command to use.
+If needed, reset it with:
 
-Then open:
-
-```text
-http://localhost:3000
+```bash
+npm run dev:reset
 ```
 
-## How the app works
+## Import Workflow Notes
 
-### Viewing recipes
+The repo includes a staged ChatGPT recipe import workflow. Important points:
 
-The home page reads from the `recipes` table and shows each recipe in a simple card.
+- Reviewed and approved import artifacts live in `data-import/`
+- The staging table is `public.recipe_imports`
+- Approved rows are loaded into `public.recipes`
+- Two hold recipes are still unresolved because their extracted steps were incomplete
 
-### Searching recipes
+The current app already displays imported recipes much more cleanly than the raw source text, but some live rows may still need manual cleanup.
 
-The search box checks:
+## Known Limitations
 
-- title
-- description
-- ingredients
+- No authentication
+- Public CRUD policies are still very open for MVP convenience
+- Some older live rows still depend on UI fallback heuristics until `supabase/recipe_metadata_backfill.sql` is run
+- Some imported rows may still contain duplicated raw text in `ingredients` and `instructions`
+- No recipe photos yet
+- Supabase MCP is configured locally but not authenticated in Codex right now
 
-The protein dropdown lets you show only recipes with one protein type, like `Chicken` or `Fish`.
+## Recommended Next Steps
 
-### Adding recipes
-
-The add recipe page inserts a new row into the `recipes` table.
-
-### Editing recipes
-
-Each recipe card includes an `Edit` button that opens the edit page and updates that recipe in Supabase.
-
-### Deleting recipes
-
-Each recipe card includes a `Delete` button that removes that recipe from Supabase after confirmation.
-
-This keeps things very simple:
-
-- no auth
-- no server actions
-- no API routes
-- no separate backend code
-
-## Beginner notes
-
-- The app uses the Next.js App Router because it is the default in modern Next.js.
-- All recipe pages are marked with `"use client"` because they use React state and browser-side Supabase calls.
-- This is not locked down for production yet, because you asked for the simplest MVP first.
-
-## Good next steps after the MVP
-
-When you are ready, the next useful upgrades would be:
-
-1. Add tags like `Dinner`, `Meal Prep`, `Quick`
-2. Add recipe photos
-3. Add authentication later
+1. Run `supabase/recipe_metadata_backfill.sql` in Supabase.
+2. Spot-check breakfast and seafood recipes after the backfill.
+3. Clean up imported rows whose ingredients and instructions still duplicate raw blobs.
+4. Keep `PROJECT_HISTORY.md` and `NEXT_STEPS.md` updated at each major milestone.

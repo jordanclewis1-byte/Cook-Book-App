@@ -58,24 +58,42 @@ function normalizeHeadingText(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+function matchesHeading(normalizedHeading: string, targets: string[]) {
+  return targets.some(
+    (target) =>
+      normalizedHeading === target ||
+      normalizedHeading.startsWith(`${target} `) ||
+      normalizedHeading.endsWith(` ${target}`) ||
+      normalizedHeading.includes(` ${target} `)
+  );
+}
+
 function extractSection(text: string, headings: string[]) {
   const lines = normalizeImportedText(text).split("\n");
   const targets = headings.map((heading) => normalizeHeadingText(heading));
   const sectionLines: string[] = [];
   let capture = false;
+  let matchedHeadingLevel: number | null = null;
 
   for (const line of lines) {
-    const headingMatch = line.match(/^#{1,6}\s*(.*?)\s*$/);
+    const headingMatch = line.match(/^(#{1,6})\s*(.*?)\s*$/);
 
     if (headingMatch) {
-      const normalizedHeading = normalizeHeadingText(headingMatch[1]);
+      const headingLevel = headingMatch[1].length;
+      const normalizedHeading = normalizeHeadingText(headingMatch[2]);
 
-      if (capture) {
+      if (capture && matchedHeadingLevel !== null && headingLevel <= matchedHeadingLevel) {
         break;
       }
 
-      if (targets.some((target) => normalizedHeading.startsWith(target))) {
+      if (matchesHeading(normalizedHeading, targets)) {
         capture = true;
+        matchedHeadingLevel = headingLevel;
+        continue;
+      }
+
+      if (capture) {
+        sectionLines.push(line);
       }
 
       continue;
@@ -84,6 +102,87 @@ function extractSection(text: string, headings: string[]) {
     if (capture) {
       sectionLines.push(line);
     }
+  }
+
+  return sectionLines.join("\n").trim();
+}
+
+function extractIngredientSection(text: string) {
+  const lines = normalizeImportedText(text).split("\n");
+  const ingredientTargets = ["ingredients"].map((heading) => normalizeHeadingText(heading));
+  const instructionTargets = ["instructions", "method", "directions", "how", "steps"].map((heading) =>
+    normalizeHeadingText(heading)
+  );
+  const sectionLines: string[] = [];
+  let capture = false;
+  let matchedHeadingLevel: number | null = null;
+
+  for (const line of lines) {
+    const headingMatch = line.match(/^(#{1,6})\s*(.*?)\s*$/);
+
+    if (headingMatch) {
+      const headingLevel = headingMatch[1].length;
+      const normalizedHeading = normalizeHeadingText(headingMatch[2]);
+
+      if (!capture && matchesHeading(normalizedHeading, ingredientTargets)) {
+        capture = true;
+        matchedHeadingLevel = headingLevel;
+        continue;
+      }
+
+      if (capture) {
+        if (matchesHeading(normalizedHeading, instructionTargets) && matchedHeadingLevel !== null && headingLevel <= matchedHeadingLevel) {
+          break;
+        }
+
+        sectionLines.push(line);
+      }
+
+      continue;
+    }
+
+    if (capture) {
+      sectionLines.push(line);
+    }
+  }
+
+  return sectionLines.join("\n").trim();
+}
+
+function extractPlainSection(text: string, headings: string[]) {
+  const lines = normalizeImportedText(text).split("\n");
+  const targets = headings.map((heading) => normalizeHeadingText(heading));
+  const sectionLines: string[] = [];
+  let capture = false;
+
+  for (const line of lines) {
+    const cleaned = cleanLine(line);
+
+    if (!capture) {
+      if (targets.includes(normalizeHeadingText(cleaned))) {
+        capture = true;
+      }
+
+      continue;
+    }
+
+    if (!cleaned) {
+      if (sectionLines.length > 0) {
+        break;
+      }
+
+      continue;
+    }
+
+    if (/^#{1,6}\s*/.test(cleaned) || cleaned === "---") {
+      break;
+    }
+
+    if (targets.includes(normalizeHeadingText(cleaned))) {
+      break;
+    }
+
+    sectionLines.push(line);
   }
 
   return sectionLines.join("\n").trim();
@@ -136,6 +235,7 @@ export function parseIngredientItems(text: string) {
     .split("\n")
     .map((line) => cleanLine(line.replace(/^\s*[-*]\s*/, "")))
     .filter(Boolean)
+    .filter((line) => !/^(?:base\s+)?method:\s*/i.test(line))
     .filter((line) => !isIgnoredLine(line))
     .filter((line) => !/^#{1,6}\s*/.test(line))
     .filter((line) => !/^\d+\.\s*/.test(line));
@@ -145,13 +245,29 @@ export function parseInstructionItems(text: string) {
   const lines = text.split("\n");
   const items: string[] = [];
   let currentStep = "";
+  let hasSeenNumberedStep = false;
 
   for (const line of lines) {
+    const headingNumberedMatch = line.match(/^#{1,6}\s*(\d+)\.\s*(.*)$/);
     const numberedMatch = line.match(/^\s*(\d+)\.\s*(.*)$/);
     const bulletMatch = line.match(/^\s*[-*]\s*(.*)$/);
     const cleaned = cleanLine(line);
 
-    if (!cleaned || isIgnoredLine(cleaned) || /^#{1,6}\s*/.test(cleaned)) {
+    if (!cleaned || isIgnoredLine(cleaned)) {
+      continue;
+    }
+
+    if (headingNumberedMatch) {
+      if (currentStep) {
+        items.push(currentStep);
+      }
+
+      hasSeenNumberedStep = true;
+      currentStep = cleanLine(headingNumberedMatch[2]);
+      continue;
+    }
+
+    if (/^#{1,6}\s*/.test(cleaned)) {
       continue;
     }
 
@@ -160,6 +276,7 @@ export function parseInstructionItems(text: string) {
         items.push(currentStep);
       }
 
+      hasSeenNumberedStep = true;
       currentStep = cleanLine(numberedMatch[2]);
       continue;
     }
@@ -171,8 +288,9 @@ export function parseInstructionItems(text: string) {
     }
 
     if (currentStep) {
-      currentStep = `${currentStep} ${continuation}`.trim();
-    } else {
+      const joiner = /[:.]$/.test(currentStep) ? " " : ": ";
+      currentStep = `${currentStep}${joiner}${continuation}`.trim();
+    } else if (!hasSeenNumberedStep) {
       items.push(continuation);
     }
   }
@@ -200,11 +318,45 @@ export function getRecipeHaystack(recipe: Pick<Recipe, "title" | "description" |
 
 export function getIngredientItems(recipe: Pick<Recipe, "ingredients">) {
   const normalized = normalizeImportedText(recipe.ingredients);
-  const section = extractSection(normalized, ["Ingredients"]);
-  return parseIngredientItems(section || normalized);
+  const section = extractIngredientSection(normalized) || extractSection(normalized, ["Ingredients"]);
+  const sourceText = section || normalized;
+  const withoutFinishSection = sourceText.replace(/\n#{1,6}\s*Finish\s*\n[\s\S]*$/i, "").trim();
+  return parseIngredientItems(withoutFinishSection);
 }
 
 const instructionSectionHeadings = ["Instructions", "Method", "Directions", "How", "Steps"];
+
+function getFallbackInstructionItems(text: string) {
+  const normalized = normalizeImportedText(text);
+  const items: string[] = [];
+
+  for (const line of normalized.split("\n")) {
+    const cleaned = cleanLine(line);
+    const methodMatch = cleaned.match(/^(?:base\s+)?method:\s*(.+)$/i);
+
+    if (methodMatch) {
+      items.push(cleanLine(methodMatch[1]));
+    }
+  }
+
+  for (const heading of ["Finish", "How to make"]) {
+    const section = extractSection(normalized, [heading]) || extractPlainSection(normalized, [heading]);
+
+    if (!section) {
+      continue;
+    }
+
+    const parsedSection = parseInstructionItems(section);
+
+    if (parsedSection.length > 0) {
+      items.push(...parsedSection);
+    } else {
+      items.push(cleanLine(section));
+    }
+  }
+
+  return Array.from(new Set(items.filter(Boolean)));
+}
 
 export function getInstructionItems(recipe: Pick<Recipe, "instructions">) {
   const normalized = normalizeImportedText(recipe.instructions);
@@ -224,7 +376,7 @@ export function getInstructionItems(recipe: Pick<Recipe, "instructions">) {
     return parsedFromWholeText;
   }
 
-  return [];
+  return getFallbackInstructionItems(normalized);
 }
 
 export function getMetaItems(recipe: Pick<Recipe, "servings" | "time_text" | "calories_text" | "protein_text">) {
