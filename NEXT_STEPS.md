@@ -40,9 +40,51 @@ The app now has a shared metadata layer for recipe classification, and the add/e
 4. Refresh `README.md` so it reflects the current filtering and metadata model instead of the older MVP-only description.
 5. Make Supabase MCP auth/setup the first explicit investigation item next session, then decide whether to keep using manual SQL or switch workflows.
 
+## 2026-03-29: Read-only production launch on Vercel
+
+The cookbook is now deployed as a mobile-friendly read-only site, and the parser has been hardened enough that several real-world imported recipe edge cases no longer render broken ingredient/instruction splits.
+
+### What We Learned
+
+- A read-only production mode is the safest path to get the cookbook live quickly before auth exists.
+- The real security boundary is Supabase RLS, not just hiding buttons in the UI.
+- Vercel will block deployment of vulnerable Next.js releases, so dependency patching can become a deployment prerequisite.
+- Imported recipe text needs section-aware parsing because headings like `Step-by-Step Instructions`, `Finish`, and component ingredient sections appear in the same recipe blob.
+
+### What Was Completed
+
+- Added a deployment flag, `NEXT_PUBLIC_ENABLE_RECIPE_WRITES`, to control whether production shows write UI.
+- Hid add/edit/delete actions and replaced direct write pages with read-only messaging when writes are disabled.
+- Updated `supabase/schema.sql` to make anonymous users read-only and move writes to `authenticated`.
+- Replaced the older Node-backed dev helper commands with PowerShell versions that work more reliably in this environment.
+- Fixed parser edge cases affecting recipes like:
+  - `Berry Cheesecake Oats`
+  - `Banana Bread Oats`
+  - `High-Protein Egg White Crepes with Ricotta & Berries`
+  - `High-Protein Savory Miso Broth Oatmeal`
+  - `Miso-Tahini Fish with Caramelized Onions`
+- Refreshed `README.md` to document the current app and deployment workflow.
+- Upgraded Next.js to `15.2.8` so Vercel would accept the deployment.
+- Deployed the app successfully to:
+  - `https://cook-book-app-six.vercel.app/`
+
+### Recommended Next Steps
+
+1. Confirm the live Supabase project has the updated read-only anonymous policies applied.
+2. Run a short production QA pass on phone and desktop, focusing on imported recipes with multi-section formatting.
+3. Add basic production polish:
+   - favicon/app icon
+   - improved site metadata
+   - any obvious mobile spacing/readability fixes
+4. Choose the next major milestone:
+   - auth for safe production editing
+   - full PWA support
+   - paste-and-parse recipe intake
+5. Keep local `.env.local` at `NEXT_PUBLIC_ENABLE_RECIPE_WRITES=true` for development if you still want local editing, while keeping production set to `false`.
+
 ## Current state
 
-Jordan's Cookbook is still a simple Next.js + Supabase app, but the UI and filtering work are farther along than before.
+Jordan's Cookbook is now live on Vercel as a read-only mobile-friendly website, while local development can still stay writable through an environment flag.
 
 What it does now:
 
@@ -51,9 +93,8 @@ What it does now:
 - Supports meal-category filtering with `Lunch/Dinner`, `Side Dish`, `Breakfast`, and `Dessert`.
 - Supports `Protein Type` filtering, including multi-protein tagging in the UI.
 - Supports fish subtype filtering for seafood recipes.
-- Lets you add recipes from a form.
-- Lets you edit recipes.
-- Lets you delete recipes.
+- Supports add/edit/delete locally when `NEXT_PUBLIC_ENABLE_RECIPE_WRITES=true`.
+- Supports safer read-only production mode when `NEXT_PUBLIC_ENABLE_RECIPE_WRITES=false`.
 - Saves structured `category`, `protein_types`, and `fish_subtypes` metadata for newly added or edited recipes.
 - Stores reviewed import rows in `public.recipe_imports` as staging and audit data.
 - Stores imported metadata in `public.recipes`, including `servings`, `time_text`, `calories_text`, `protein_text`, `source_type`, `source_conversation_id`, and `raw_import_text`.
@@ -65,48 +106,46 @@ Current architecture:
 - Frontend: Next.js App Router
 - Database/backend: Supabase
 - Data access: browser-side Supabase client
+- Hosting: Vercel
 - Main table: `public.recipes`
 - Staging table: `public.recipe_imports`
 
 Known limitations:
 
 - No authentication
-- Existing live rows still need the structured metadata backfill applied in Supabase
+- Production editing is intentionally disabled until auth exists
 - No recipe photos
-- Filtering still falls back to UI heuristics for older rows until the database backfill is run
-- Some imported live rows have noisy `protein` values that do not match the final UI behavior
+- Some imported recipes may still need manual cleanup even after the newer parser fixes
 - 2 hold recipes still remain unresolved because their extracted steps are incomplete
-- Public read/insert/update/delete policies are still very open for an MVP
+- Need to verify the live Supabase project is using the safer read-only anonymous policies
 - Supabase MCP is configured locally but not authenticated yet
 
 ## What We Learned
 
-- The live `public.recipes` data is noisier than the reviewed import artifacts, so the UI should not trust the old `protein` field for modern filtering.
-- Multi-protein classification is useful for this cookbook because several recipes genuinely span dairy/eggs or seafood/beans.
-- Parsed ingredients are a better source for protein inference than the full raw import text.
-- Supabase MCP setup is partially in place, but until auth works it should not be counted on for schema/data work.
+- A read-only production launch is a practical bridge before authentication work.
+- Parser quality matters a lot for imported recipes because section boundaries vary more than expected.
+- Vercel deployment policy can force dependency upgrades even when local builds pass.
+- Supabase env vars and RLS are the two most critical pieces of deployment correctness.
 
 ## What Was Completed
 
-- Cleaned up imported recipe rendering in the UI.
-- Surfaced saved metadata in recipe cards.
-- Reworked browsing around the new meal categories.
-- Added richer protein filtering, including a dedicated shrimp protein type and fish subtype filtering.
-- Added support for multiple protein tags per recipe in the UI.
-- Saved the current checkpoint in git before later filtering work.
-- Attempted Supabase MCP setup and confirmed the current blocker is authentication, not missing config.
+- Hardened recipe parsing for several imported-recipe edge cases.
+- Added deployment-safe read-only mode controlled by environment variable.
+- Updated the Supabase schema policies for anonymous read-only access.
+- Refreshed the README and deployment notes.
+- Upgraded Next.js to a patched release and deployed the app to Vercel.
 
 ## Recommended Next Steps
 
-1. Run the structured metadata backfill against the live Supabase project.
-2. Hand-tune a few edge-case recipes after the backfill lands.
-3. Do a pre-deploy cleanup pass for imported recipes whose ingredient and instruction fields still contain the same raw blob.
-4. Refresh `README.md` to match the current app.
-5. Revisit Supabase MCP auth next session as an explicit setup task; otherwise continue with manual SQL/database changes.
+1. Verify the live Supabase project has the intended read-only anonymous RLS policies.
+2. Do a production QA pass on phone and desktop, especially for parser-sensitive imported recipes.
+3. Add basic production polish like favicon/app icon and better metadata.
+4. Decide whether the next milestone is auth, full PWA support, or paste-and-parse intake.
+5. Revisit Supabase MCP auth later only if it will materially help future schema/data work.
 
 ## Suggested Immediate Next Task
 
-The best next task is applying the structured metadata backfill in Supabase and then spot-checking the recipes that are most likely to need manual cleanup.
+The best next task is a short production hardening pass: verify live Supabase policies, do focused recipe QA on phone, and add a favicon/basic metadata polish pass.
 
 ## Session note
 

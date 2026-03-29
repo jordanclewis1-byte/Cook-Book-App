@@ -200,6 +200,49 @@ The recipe classification logic was moved into a shared helper layer, and the ad
 4. Refresh the README so it reflects the current app instead of the original MVP.
 5. Make Supabase MCP setup/auth the first explicit action item next session and then decide whether it is worth adopting.
 
+## 2026-03-29: Production deployment, parser hardening, and read-only mobile release
+
+The cookbook was prepared for a safer first deployment, pushed to GitHub, upgraded past a blocked Next.js security release, and deployed to Vercel as a mobile-friendly read-only site. Along the way, the imported-recipe parser was hardened against several real-world formatting edge cases uncovered during recipe spot-checking.
+
+### What We Learned
+
+- The biggest deployment blocker was not the app build, but the fact that anonymous Supabase write policies were still too open for a public launch.
+- Vercel now blocks deployments of vulnerable Next.js releases, so staying current on patch versions matters even for small apps.
+- Several imported recipes use mixed markdown patterns like `Step-by-Step Instructions`, numbered subheadings, ingredient subsections, `Base method:` lines, and `Finish` sections, so the parser needed to preserve nested instruction headings while filtering instruction-like text out of ingredients.
+- A simple read-only production mode is a good bridge: it gets the app live on phone quickly without forcing auth work into the same milestone.
+
+### What Was Completed
+
+- Fixed `npm run dev:status` by replacing the older Node-backed script path with PowerShell helpers that work reliably in this environment.
+- Added PowerShell-backed `dev:status` and `dev:reset` scripts and updated `package.json` to use them.
+- Refreshed `README.md` so it reflects the current app, import workflow, and metadata model instead of the original MVP-only state.
+- Investigated and fixed several parser edge cases in `lib/recipe-metadata.ts`, including:
+  - missing instructions for oatmeal recipes with `Base method:` and `Finish` sections
+  - instruction/ingredient overlap for recipes with `Step-by-Step Instructions`
+  - numbered markdown subheadings inside instruction sections
+  - ingredient subsections like `Lemon tahini sauce`
+  - `Finish` text leaking into ingredient lists
+- Added a deploy-time write toggle via `NEXT_PUBLIC_ENABLE_RECIPE_WRITES`.
+- Hid add/edit/delete UI in production-safe read-only mode and replaced direct write pages with a read-only message when writes are disabled.
+- Updated `supabase/schema.sql` so anonymous users are read-only and write actions move to `authenticated`.
+- Verified the app builds successfully in production mode after the deployment-readiness changes.
+- Pushed the deployment-readiness work to GitHub.
+- Upgraded Next.js from `15.2.2` to the patched `15.2.8` release so Vercel would accept the deployment.
+- Deployed the app successfully to Vercel at:
+  - `https://cook-book-app-six.vercel.app/`
+- Confirmed the live site is usable from a phone browser as milestone 1 of the deployment path.
+
+### Recommended Next Steps
+
+1. Confirm the safer Supabase RLS policies have been applied in the live project, not just committed in the repo.
+2. Do a focused production QA pass on phone and desktop for a handful of imported recipes, especially breakfast and multi-section fish recipes.
+3. Add basic production polish: favicon/app icon, improved metadata, and any obvious mobile readability tweaks.
+4. Decide the next major product track:
+   - add auth so production editing can be re-enabled safely
+   - implement full PWA support
+   - build the paste-and-parse recipe intake flow
+5. Keep `PROJECT_HISTORY.md` and `NEXT_STEPS.md` aligned after the next production-facing milestone.
+
 ## Repo convention going forward
 
 For future major milestones, record a short dated entry in `PROJECT_HISTORY.md` and include these sections:
