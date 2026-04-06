@@ -4,9 +4,7 @@
 
 - Git is installed but not on the PowerShell PATH inside Codex.
 - For cookbook work, use C:\Program Files\Git\cmd\git.exe unless the user has added Git to PATH and restarted Codex.
-- Remind Jordan about this at the beginning of the next cookbook session.
-- Make Supabase MCP setup/auth a deliberate action item next session before deciding whether it is worth finishing.
-- A Supabase MCP server entry is saved locally in `C:\Users\jorda\.codex\config.toml`, but it still fails auth handshaking. For now, do database work the old way instead of assuming MCP access is available.
+- Supabase MCP is now configured and authenticated in `C:\Users\jorda\.claude\settings.json`. Use it for database work.
 - If `localhost:3000` looks dead, try `npm run dev:reset` before deeper debugging. It clears stale `.next` output, frees port `3000`, and starts a fresh dev server.
 - Use `npm run dev:status` to quickly check whether the local dev server is healthy, stale, or not running before restarting things.
 
@@ -143,9 +141,62 @@ Known limitations:
 4. Decide whether the next milestone is auth, full PWA support, or paste-and-parse intake.
 5. Revisit Supabase MCP auth later only if it will materially help future schema/data work.
 
+## 2026-04-05: Production hardening and parser fixes
+
+RLS policies were verified live, a production QA pass was completed, and several parser bugs were fixed and deployed.
+
+### What We Learned
+
+- Supabase MCP is now authenticated via `C:\Users\jorda\.claude\settings.json` — use it for future database work.
+- The `isIgnoredLine` check in `parseInstructionItems` was running against the full raw line (e.g. `"1. Blend the batter"`) rather than the extracted step text, so numbered section headers were slipping through.
+- The `°` degree symbol was corrupted to `?` in imported data; a targeted regex fix in `normalizeImportedText` handles it display-side without touching the database.
+
+### What Was Completed
+
+- Verified live Supabase RLS policies match the intended schema: `anon` read-only, `authenticated` write.
+- Ran production QA pass on the live Vercel site for imported recipes.
+- Fixed `°F`/`°C` display corruption in `normalizeImportedText`.
+- Fixed Egg White Crepes ingredient subsection headers ("Crepe batter", "Filling", "For the pan") appearing as bullet items.
+- Fixed Egg White Crepes instruction section headers ("Blend the batter", "Heat the pan") appearing as numbered steps.
+- Deployed fixes to production via GitHub → Vercel.
+- Created a `cookbook-briefing` skill for session recaps.
+
+### Recommended Next Steps
+
+See the 5-step roadmap below.
+
+## Roadmap (agreed 2026-04-05)
+
+These are the next 5 milestones in priority order:
+
+### Step 1: Favicon + polish
+- Add a favicon/app icon
+- Improve `<meta>` title, description, and og tags
+- Fix any obvious mobile spacing or readability issues
+
+### Step 2: Individual recipe pages + shareable links
+- Add a dynamic `/recipes/[id]` route for each recipe
+- Each recipe card on the homepage links to its own page
+- Shareable URL per recipe
+
+### Step 3: Homepage/search results redesign
+- Homepage becomes a clean landing page with search
+- Recipe list moves to a search/results page
+- Results link through to individual recipe pages
+
+### Step 4: Auth
+- Add Supabase auth (login/logout)
+- Re-enable add/edit/delete in production behind authentication
+- Protect write routes so only the authenticated user can modify recipes
+
+### Step 5: Favorite recipes
+- Allow marking recipes as favorites (requires auth + recipe pages)
+- Persist favorites per user in Supabase
+- Add a favorites filter or view
+
 ## Suggested Immediate Next Task
 
-The best next task is a short production hardening pass: verify live Supabase policies, do focused recipe QA on phone, and add a favicon/basic metadata polish pass.
+Start with Step 1 (favicon + polish) — it's a quick win and makes the app look finished before shareable links go out.
 
 ## Session note
 

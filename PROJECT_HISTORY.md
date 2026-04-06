@@ -243,6 +243,37 @@ The cookbook was prepared for a safer first deployment, pushed to GitHub, upgrad
    - build the paste-and-parse recipe intake flow
 5. Keep `PROJECT_HISTORY.md` and `NEXT_STEPS.md` aligned after the next production-facing milestone.
 
+## 2026-04-05: Production hardening, parser fixes, and roadmap planning
+
+RLS policies were confirmed live, a production QA pass surfaced several parser issues, fixes were deployed, and the next 5 milestones were agreed.
+
+### What We Learned
+
+- Supabase MCP is now fully authenticated and available via Claude Code settings — no longer needs the manual SQL path for database queries.
+- The `isIgnoredLine` guard in `parseInstructionItems` was applied to the full raw line rather than the extracted step text, allowing numbered section headers to pass through as real steps.
+- A targeted display-layer regex is sufficient to fix corrupted degree symbols without touching the database.
+- PWA work is low priority given the app already works well in a mobile browser. A basic web app manifest could be added later with minimal effort if needed.
+
+### What Was Completed
+
+- Verified live Supabase RLS policies: `anon` is read-only, `authenticated` handles writes. Policies match the committed schema.
+- Ran a production QA pass on the Vercel site, targeting the most parser-sensitive imported recipes.
+- Fixed three parser issues in `lib/recipe-metadata.ts`:
+  - `°F`/`°C` degree symbol restored via regex in `normalizeImportedText`
+  - Egg White Crepes ingredient subsection headers ("Crepe batter", "Filling", "For the pan") filtered from bullet list
+  - Egg White Crepes instruction section headers ("Blend the batter", "Heat the pan") filtered by applying `isIgnoredLine` to extracted step text
+- Deployed parser fixes to production.
+- Created a `cookbook-briefing` Claude Code skill for session recaps.
+- Agreed on a 5-step feature roadmap (see NEXT_STEPS.md).
+
+### Recommended Next Steps
+
+1. Favicon + polish (Step 1 of roadmap)
+2. Individual recipe pages + shareable links (Step 2)
+3. Homepage/search results redesign (Step 3)
+4. Auth (Step 4)
+5. Favorite recipes (Step 5)
+
 ## Repo convention going forward
 
 For future major milestones, record a short dated entry in `PROJECT_HISTORY.md` and include these sections:
