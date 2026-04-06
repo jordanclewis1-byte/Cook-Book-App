@@ -201,7 +201,12 @@ function isIgnoredLine(line: string) {
     "staples",
     "finish",
     "serve with",
-    "optional upgrade"
+    "optional upgrade",
+    "crepe batter",
+    "filling",
+    "for the pan",
+    "blend the batter",
+    "heat the pan"
   ].some((prefix) => lower === prefix || lower.startsWith(`${prefix}:`));
 }
 
@@ -217,6 +222,7 @@ export function normalizeImportedText(text: string) {
   }
 
   return normalized
+    .replace(/(\d+)\?([CF])\b/g, "$1°$2")
     .replace(/^TO REVIEW:.*$/gim, "")
     .replace(/^Perfect\s+(?:-|\u2014).*$/gim, "")
     .replace(/^Would you like me to.*$/gim, "")
@@ -263,7 +269,8 @@ export function parseInstructionItems(text: string) {
       }
 
       hasSeenNumberedStep = true;
-      currentStep = cleanLine(headingNumberedMatch[2]);
+      const headingStepText = cleanLine(headingNumberedMatch[2]);
+      currentStep = isIgnoredLine(headingStepText) ? "" : headingStepText;
       continue;
     }
 
@@ -277,7 +284,8 @@ export function parseInstructionItems(text: string) {
       }
 
       hasSeenNumberedStep = true;
-      currentStep = cleanLine(numberedMatch[2]);
+      const stepText = cleanLine(numberedMatch[2]);
+      currentStep = isIgnoredLine(stepText) ? "" : stepText;
       continue;
     }
 
