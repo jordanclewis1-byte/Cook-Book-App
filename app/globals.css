@@ -290,13 +290,83 @@ select {
   padding-left: 1.35rem;
 }
 
+.landing-hero {
+  padding: 2rem;
+}
+
+.login-card {
+  max-width: 420px;
+}
+
+.nav-signout {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+.landing-search-form {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.landing-search-input {
+  flex: 1;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fffdf9;
+  font: inherit;
+}
+
+.recipe-card h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.recipe-card h3 a:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 3px;
+}
+
+.favorite-button {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 0.6rem 0.85rem;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.favorite-button:hover {
+  background: #f3e7d6;
+  color: var(--accent);
+}
+
+.favorite-button--active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: #fdf0e8;
+}
+
+.favorite-button--active:hover {
+  background: #f8e0cf;
+}
+
 @media (max-width: 720px) {
-  .site-header,
+  .page-shell {
+    width: min(960px, calc(100% - 2.5rem));
+    padding-top: 1.5rem;
+  }
+
+  .site-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
   .search-row,
   .search-row-wide,
   .two-column {
     grid-template-columns: 1fr;
-    display: grid;
-    align-items: start;
   }
 }

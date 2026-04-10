@@ -1,11 +1,26 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { recipeWritesEnabled } from "@/lib/app-config";
+import { AuthProvider } from "@/lib/auth-context";
+import SiteNav from "@/components/SiteNav";
 
 export const metadata: Metadata = {
   title: "Jordan's Cookbook",
-  description: "A simple personal cookbook built with Next.js and Supabase."
+  description: "A personal cookbook for browsing and searching recipes.",
+  openGraph: {
+    title: "Jordan's Cookbook",
+    description: "A personal cookbook for browsing and searching recipes.",
+    type: "website"
+  },
+  twitter: {
+    card: "summary",
+    title: "Jordan's Cookbook",
+    description: "A personal cookbook for browsing and searching recipes."
+  }
+};
+
+export const viewport: Viewport = {
+  themeColor: "#9f4f2b"
 };
 
 export default function RootLayout({
@@ -16,19 +31,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="page-shell">
-          <header className="site-header">
-            <div>
-              <p className="eyebrow">Personal Cookbook</p>
-              <h1>Jordan&apos;s Cookbook</h1>
-            </div>
-            <nav className="nav-links">
-              <Link href="/">Recipes</Link>
-              {recipeWritesEnabled ? <Link href="/add-recipe">Add Recipe</Link> : null}
-            </nav>
-          </header>
-          <main>{children}</main>
-        </div>
+        <AuthProvider>
+          <div className="page-shell">
+            <header className="site-header">
+              <div>
+                <p className="eyebrow">Personal Cookbook</p>
+                <Link href="/">
+                  <h1>Jordan&apos;s Cookbook</h1>
+                </Link>
+              </div>
+              <SiteNav />
+            </header>
+            <main>{children}</main>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
